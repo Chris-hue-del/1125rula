@@ -1,0 +1,2969 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>學生坐姿矯正系統</title>
+<meta name="application-name" content="Student Posture Correction System">
+<meta name="description" content="學生坐姿矯正系統 — RULA · 圓肩 · 烏龜頸 · 側傾 · 姿勢矯正箭頭">
+<meta name="theme-color" content="#060610">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg:        #060610;
+  --bg-panel:  rgba(10,10,24,0.84);
+  --g1:        rgba(255,255,255,0.04);
+  --g2:        rgba(255,255,255,0.08);
+  --gbd:       rgba(255,255,255,0.09);
+  --gbdb:      rgba(255,255,255,0.18);
+  --blue:      #3b82f6;
+  --cyan:      #06b6d4;
+  --green:     #22c55e;
+  --yellow:    #eab308;
+  --orange:    #f97316;
+  --red:       #ef4444;
+  --purple:    #a855f7;
+  --teal:      #14b8a6;
+  --t1:        rgba(255,255,255,0.93);
+  --t2:        rgba(255,255,255,0.56);
+  --t3:        rgba(255,255,255,0.28);
+  --ui:        'Syne', sans-serif;
+  --mono:      'Space Mono', monospace;
+  --rsm: 8px; --rmd: 14px; --rlg: 20px;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);color:var(--t1);font-family:var(--ui);display:flex;flex-direction:column;-webkit-font-smoothing:antialiased;}
+
+/* BG blobs */
+.bg-layer{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
+.bg-blob{position:absolute;border-radius:50%;filter:blur(100px);opacity:0.11;animation:bdrift 18s ease-in-out infinite;}
+.bg-blob:nth-child(1){width:680px;height:680px;background:var(--blue);top:-180px;left:-160px;animation-delay:0s;}
+.bg-blob:nth-child(2){width:480px;height:480px;background:var(--purple);top:42%;right:-140px;animation-delay:-6s;}
+.bg-blob:nth-child(3){width:380px;height:380px;background:var(--teal);bottom:-80px;left:38%;animation-delay:-12s;}
+@keyframes bdrift{0%,100%{transform:translate(0,0)scale(1);}33%{transform:translate(22px,-16px)scale(1.04);}66%{transform:translate(-16px,22px)scale(0.97);}}
+
+/* HEADER */
+header{
+  position:relative;z-index:20;flex-shrink:0;
+  display:flex;align-items:center;gap:12px;
+  padding:9px 18px;
+  background:rgba(6,6,16,0.8);
+  backdrop-filter:blur(40px) saturate(160%);
+  border-bottom:1px solid var(--gbd);
+}
+.logo-mark{
+  width:30px;height:30px;border-radius:8px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--blue),var(--cyan));
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 20px rgba(59,130,246,0.42);
+}
+/* SVG logo icon — no emoji */
+.logo-mark svg{width:16px;height:16px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.logo-words{flex:1;min-width:0;}
+.logo-title{font-size:14px;font-weight:800;letter-spacing:-0.3px;color:var(--t1);}
+.logo-sub{font-size:10px;color:var(--t3);font-weight:400;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hdr-right{display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.chip{font-size:10px;font-weight:600;padding:3px 9px;border-radius:20px;letter-spacing:0.3px;white-space:nowrap;}
+.chip-off {background:rgba(255,255,255,0.05);color:var(--t3);border:1px solid rgba(255,255,255,0.07);}
+.chip-live{background:rgba(34,197,94,0.13);color:var(--green);border:1px solid rgba(34,197,94,0.28);display:none;}
+.chip-http{background:rgba(249,115,22,0.12);color:var(--orange);border:1px solid rgba(249,115,22,0.28);display:none;}
+.chip-ema {background:rgba(59,130,246,0.12);color:var(--blue);border:1px solid rgba(59,130,246,0.28);}
+.chip-cal {background:rgba(34,197,94,0.12);color:var(--green);border:1px solid rgba(34,197,94,0.28);display:none;}
+.chip-paused{background:rgba(234,179,8,0.13);color:var(--yellow);border:1px solid rgba(234,179,8,0.3);display:none;}
+#flipBtn,#pauseBtn{
+  display:none;align-items:center;gap:4px;
+  background:var(--g1);border:1px solid var(--gbd);
+  color:var(--t2);font-size:11px;font-weight:600;font-family:var(--ui);
+  padding:5px 11px;border-radius:20px;cursor:pointer;transition:all 0.2s;
+}
+#flipBtn:hover,#pauseBtn:hover{background:var(--g2);color:var(--t1);}
+#flipBtn svg,#pauseBtn svg{width:12px;height:12px;}
+#flipBtn.switching svg{animation:sfx 0.45s ease both;}
+#pauseBtn.active{background:rgba(234,179,8,0.14);border-color:rgba(234,179,8,0.36);color:var(--yellow);}
+@keyframes sfx{0%{transform:rotateY(0)}100%{transform:rotateY(180deg)}}
+
+/* MAIN GRID */
+main{display:grid;grid-template-columns:1fr 318px;flex:1;overflow:hidden;position:relative;z-index:1;min-height:0;}
+
+/* CAM AREA */
+.cam-wrap{position:relative;background:#000;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+#video{width:100%;height:100%;object-fit:cover;display:none;}
+#video.mirror{transform:scaleX(-1);}
+#canvas{position:absolute;inset:0;width:100%;height:100%;}
+
+.fps-pill{
+  position:absolute;top:12px;right:12px;z-index:8;
+  background:rgba(0,0,0,0.42);backdrop-filter:blur(10px);
+  font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.36);
+  padding:3px 9px;border-radius:8px;
+}
+
+/* RULA badge on video */
+.rula-badge{
+  position:absolute;top:12px;left:12px;z-index:8;display:none;
+  background:rgba(6,6,16,0.72);backdrop-filter:blur(16px);
+  border:1px solid rgba(255,255,255,0.1);border-radius:12px;
+  padding:8px 14px;display:flex;align-items:center;gap:10px;
+  transition:border-color 0.3s;
+}
+.rula-badge.warn  {border-color:rgba(234,179,8,0.4);}
+.rula-badge.danger{border-color:rgba(239,68,68,0.4);}
+.rb-score{font-size:28px;font-weight:800;letter-spacing:-1px;color:var(--green);transition:color 0.3s;font-family:var(--mono);}
+.rb-score.warn  {color:var(--yellow);}
+.rb-score.danger{color:var(--red);}
+.rb-label{font-size:9px;color:var(--t3);font-weight:600;letter-spacing:1px;text-transform:uppercase;}
+.rb-lv{font-size:11px;font-weight:700;color:var(--green);transition:color 0.3s;margin-top:1px;}
+.rb-lv.warn  {color:var(--yellow);}
+.rb-lv.danger{color:var(--red);}
+
+/* ALERT PILLS */
+.alert-pills{
+  position:absolute;bottom:14px;left:12px;z-index:8;
+  display:flex;flex-wrap:wrap;gap:6px;max-width:calc(100% - 24px);
+}
+.ap{
+  display:flex;align-items:center;gap:5px;
+  font-size:11px;font-weight:700;
+  padding:5px 12px;border-radius:20px;
+  backdrop-filter:blur(16px);
+  border:1px solid rgba(255,255,255,0.1);
+  opacity:0;transform:translateY(5px);
+  transition:opacity 0.25s,transform 0.25s;pointer-events:none;
+}
+.ap.show{opacity:1;transform:translateY(0);}
+.ap-dot{width:7px;height:7px;border-radius:50%;animation:blink 1s ease-in-out infinite;flex-shrink:0;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.35}}
+
+.ap.ap-sh {background:rgba(249,115,22,0.22);color:var(--orange);border-color:rgba(249,115,22,0.4);}
+.ap.ap-sh .ap-dot{background:var(--orange);box-shadow:0 0 6px var(--orange);}
+.ap.ap-tu {background:rgba(168,85,247,0.22);color:var(--purple);border-color:rgba(168,85,247,0.4);}
+.ap.ap-tu .ap-dot{background:var(--purple);box-shadow:0 0 6px var(--purple);}
+.ap.ap-ti {background:rgba(6,182,212,0.22);color:var(--cyan);border-color:rgba(6,182,212,0.4);}
+.ap.ap-ti .ap-dot{background:var(--cyan);box-shadow:0 0 6px var(--cyan);}
+.ap.ap-nk {background:rgba(239,68,68,0.22);color:var(--red);border-color:rgba(239,68,68,0.4);}
+.ap.ap-nk .ap-dot{background:var(--red);box-shadow:0 0 6px var(--red);}
+.ap.ap-tr {background:rgba(234,179,8,0.22);color:var(--yellow);border-color:rgba(234,179,8,0.4);}
+.ap.ap-tr .ap-dot{background:var(--yellow);box-shadow:0 0 6px var(--yellow);}
+
+/* Danger VFX */
+.danger-vfx{position:absolute;inset:0;pointer-events:none;z-index:5;transition:box-shadow 0.2s;}
+.danger-vfx.on{box-shadow:inset 0 0 80px rgba(239,68,68,0.28),inset 0 0 0 3px rgba(239,68,68,0.55);animation:dvfx 0.9s ease-in-out infinite;}
+@keyframes dvfx{0%,100%{box-shadow:inset 0 0 60px rgba(239,68,68,0.2),inset 0 0 0 3px rgba(239,68,68,0.45)}50%{box-shadow:inset 0 0 120px rgba(239,68,68,0.38),inset 0 0 0 4px rgba(239,68,68,0.75)}}
+
+.no-detect{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  font-size:12px;font-weight:500;color:rgba(255,255,255,0.26);
+  text-align:center;z-index:6;display:none;line-height:2.1;
+  background:rgba(0,0,0,0.36);padding:14px 22px;
+  border-radius:14px;backdrop-filter:blur(20px);
+  border:1px solid rgba(255,255,255,0.07);
+}
+
+/* LOW-CONFIDENCE WARNING */
+.low-conf-warning{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  font-size:13px;font-weight:700;color:var(--red);
+  text-align:center;z-index:9;display:none;line-height:1.9;
+  background:rgba(239,68,68,0.16);padding:14px 24px;
+  border-radius:14px;backdrop-filter:blur(20px);
+  border:1px solid rgba(239,68,68,0.42);
+  max-width:80%;
+}
+.low-conf-warning .lcw-sub{font-size:10px;font-weight:500;color:rgba(255,180,180,0.8);margin-top:4px;}
+
+/* PAUSED OVERLAY */
+.paused-overlay{
+  position:absolute;inset:0;z-index:12;display:none;
+  align-items:center;justify-content:center;
+  background:rgba(6,6,16,0.5);backdrop-filter:blur(6px);
+}
+.po-box{
+  background:rgba(12,12,28,0.88);border:1px solid rgba(234,179,8,0.3);
+  border-radius:20px;padding:26px 32px;text-align:center;max-width:320px;
+  box-shadow:0 24px 60px rgba(0,0,0,0.5);
+  animation:lin 0.3s ease both;
+}
+.po-icon{width:48px;height:48px;border-radius:14px;background:rgba(234,179,8,0.14);border:1px solid rgba(234,179,8,0.32);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;color:var(--yellow);}
+.po-icon svg{width:22px;height:22px;}
+.po-title{font-size:16px;font-weight:800;margin-bottom:5px;}
+.po-sub{font-size:11px;color:var(--t3);margin-bottom:16px;line-height:1.6;}
+.po-resume{padding:10px 22px;border-radius:var(--rsm);border:1px solid rgba(234,179,8,0.35);background:rgba(234,179,8,0.14);color:var(--yellow);font-size:12px;font-weight:700;font-family:var(--ui);cursor:pointer;transition:all 0.2s;}
+.po-resume:hover{background:rgba(234,179,8,0.24);transform:translateY(-1px);}
+
+/* LAUNCH SCREEN */
+#launchScreen{
+  position:absolute;inset:0;z-index:30;
+  background:rgba(6,6,16,0.96);backdrop-filter:blur(60px);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  overflow-y:auto;
+}
+.l-rings{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
+.l-ring{
+  position:absolute;border-radius:50%;
+  border:1px solid rgba(59,130,246,0.07);
+  top:50%;left:50%;transform:translate(-50%,-50%);
+  animation:rpulse 9s ease-in-out infinite;
+}
+.l-ring:nth-child(1){width:220px;height:220px;animation-delay:0s;}
+.l-ring:nth-child(2){width:440px;height:440px;animation-delay:-2.2s;}
+.l-ring:nth-child(3){width:660px;height:660px;animation-delay:-4.4s;}
+.l-ring:nth-child(4){width:880px;height:880px;animation-delay:-6.6s;}
+@keyframes rpulse{0%,100%{opacity:0.4;transform:translate(-50%,-50%)scale(1)}50%{opacity:0.9;transform:translate(-50%,-50%)scale(1.02)}}
+
+.l-inner{
+  position:relative;z-index:2;
+  display:flex;flex-direction:column;align-items:center;
+  max-width:480px;width:92%;padding:18px 0 30px;
+  animation:lin 0.5s cubic-bezier(.22,.68,0,1.2) both;
+}
+@keyframes lin{from{opacity:0;transform:translateY(18px)scale(0.97)}to{opacity:1;transform:none}}
+
+/* Logo icon on launch — SVG, no emoji */
+.l-icon{
+  width:72px;height:72px;border-radius:20px;
+  background:linear-gradient(145deg,rgba(59,130,246,0.22),rgba(6,182,212,0.1));
+  border:1px solid rgba(59,130,246,0.28);
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:16px;
+  box-shadow:0 18px 56px rgba(59,130,246,0.18),0 0 0 1px rgba(255,255,255,0.04);
+  animation:ihov 4.5s ease-in-out infinite;
+}
+.l-icon svg{width:38px;height:38px;stroke:var(--cyan);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;}
+@keyframes ihov{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+
+.l-title{font-size:22px;font-weight:800;letter-spacing:-0.5px;margin-bottom:4px;text-align:center;}
+.l-sub{font-size:12px;color:var(--t3);margin-bottom:22px;text-align:center;line-height:1.75;}
+.l-name{color:var(--cyan);font-weight:800;}
+
+.feat-strip{width:100%;display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;justify-content:center;}
+.feat-badge{
+  font-size:10px;font-weight:700;padding:4px 11px;border-radius:20px;letter-spacing:0.2px;
+}
+.fb-orange{background:rgba(249,115,22,0.14);color:var(--orange);border:1px solid rgba(249,115,22,0.3);}
+.fb-purple{background:rgba(168,85,247,0.14);color:var(--purple);border:1px solid rgba(168,85,247,0.3);}
+.fb-cyan  {background:rgba(6,182,212,0.14); color:var(--cyan);  border:1px solid rgba(6,182,212,0.3);}
+.fb-green {background:rgba(34,197,94,0.14); color:var(--green); border:1px solid rgba(34,197,94,0.3);}
+
+#httpsCard{
+  display:none;width:100%;margin-bottom:12px;
+  background:rgba(249,115,22,0.07);border:1px solid rgba(249,115,22,0.22);
+  border-radius:var(--rmd);padding:12px 14px;
+}
+.ht-t{font-size:11px;font-weight:700;color:var(--orange);margin-bottom:4px;}
+.ht-b{font-size:11px;color:rgba(255,200,100,0.62);line-height:1.65;}
+.ht-b code{background:rgba(249,115,22,0.12);color:var(--orange);padding:1px 5px;border-radius:4px;font-size:10px;}
+
+.guide-block{
+  width:100%;margin-bottom:16px;
+  background:var(--g1);border:1px solid var(--gbd);
+  border-radius:var(--rmd);padding:14px 16px;
+}
+.gb-title{font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;}
+.gb-steps{display:flex;flex-direction:column;gap:8px;}
+.g-step{display:flex;align-items:flex-start;gap:10px;}
+.g-num{min-width:20px;height:20px;border-radius:50%;background:rgba(59,130,246,0.13);border:1px solid rgba(59,130,246,0.3);font-size:10px;font-weight:700;color:var(--blue);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.g-txt{font-size:12px;color:var(--t2);line-height:1.55;padding-top:2px;}
+.g-txt b{color:var(--cyan);font-weight:600;}
+
+#startBtn{
+  width:100%;padding:15px;
+  background:linear-gradient(135deg,rgba(59,130,246,0.78),rgba(6,182,212,0.58));
+  border:1px solid rgba(6,182,212,0.35);border-radius:var(--rmd);
+  color:#fff;font-size:14px;font-weight:700;font-family:var(--ui);
+  cursor:pointer;transition:all 0.25s;margin-bottom:10px;
+  box-shadow:0 8px 30px rgba(59,130,246,0.26);letter-spacing:0.2px;
+}
+#startBtn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 12px 40px rgba(59,130,246,0.4);}
+#startBtn:disabled{opacity:0.44;cursor:not-allowed;}
+.btn-sp{display:inline-block;margin-right:5px;}
+#startBtn.loading .btn-sp{animation:spin 1s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+#errCard{
+  display:none;width:100%;margin-top:8px;
+  background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.24);
+  border-radius:var(--rmd);padding:13px;
+}
+.err-h{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--red);margin-bottom:5px;}
+.err-code{font-size:10px;color:rgba(255,100,100,0.52);background:rgba(239,68,68,0.1);padding:2px 7px;border-radius:4px;margin-bottom:5px;font-family:var(--mono);}
+.err-msg{font-size:11px;color:rgba(255,180,180,0.72);line-height:1.6;}
+
+/* CALIBRATION OVERLAY */
+#calOverlay{
+  position:absolute;inset:0;z-index:20;display:none;
+  flex-direction:column;align-items:center;justify-content:center;
+  background:rgba(6,6,16,0.8);backdrop-filter:blur(40px);
+}
+.cal-box{
+  background:rgba(12,12,28,0.92);border:1px solid var(--gbdb);
+  border-radius:26px;padding:28px 32px;
+  text-align:center;max-width:370px;width:90%;
+  box-shadow:0 32px 80px rgba(0,0,0,0.6);
+  animation:lin 0.3s ease both;
+}
+.cal-t{font-size:17px;font-weight:800;margin-bottom:6px;}
+.cal-s{font-size:12px;color:var(--t2);margin-bottom:16px;line-height:1.65;}
+.cal-stat{font-size:11px;font-weight:600;color:var(--yellow);min-height:18px;margin-bottom:12px;}
+.cal-checks{display:flex;gap:12px;margin-bottom:16px;justify-content:center;flex-wrap:wrap;}
+.ck-item{display:flex;flex-direction:column;align-items:center;gap:5px;}
+.ck-dot{width:13px;height:13px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.16);background:transparent;transition:all 0.3s;}
+.ck-dot.ok {background:var(--green);border-color:var(--green);box-shadow:0 0 10px rgba(34,197,94,0.48);}
+.ck-dot.bad{background:rgba(239,68,68,0.22);border-color:var(--red);}
+.ck-lbl{font-size:10px;color:var(--t3);font-weight:600;}
+.cal-cd{font-size:66px;font-weight:800;font-family:var(--mono);color:var(--blue);line-height:1;margin:5px 0 14px;display:none;letter-spacing:-3px;animation:cpulse 1s ease-in-out infinite;}
+@keyframes cpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.cal-done{font-size:14px;font-weight:700;color:var(--green);display:none;margin-bottom:11px;}
+#calStartBtn{
+  width:100%;padding:12px;
+  background:linear-gradient(135deg,rgba(59,130,246,0.62),rgba(6,182,212,0.48));
+  border:1px solid rgba(6,182,212,0.3);border-radius:var(--rsm);
+  color:#fff;font-size:12px;font-weight:700;font-family:var(--ui);
+  cursor:pointer;transition:all 0.2s;margin-bottom:8px;
+}
+#calStartBtn:disabled{opacity:0.32;cursor:not-allowed;}
+#calCancelBtn{background:transparent;border:none;color:var(--t3);font-size:11px;cursor:pointer;text-decoration:underline;}
+
+/* RIGHT PANEL */
+.side-panel{
+  background:var(--bg-panel);
+  backdrop-filter:blur(40px) saturate(180%);
+  border-left:1px solid var(--gbd);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.tab-row{display:flex;gap:3px;padding:10px 10px 0;flex-shrink:0;}
+.tab-btn{
+  flex:1;font-size:11px;font-weight:700;font-family:var(--ui);
+  padding:8px 4px;border:none;border-radius:8px 8px 0 0;
+  cursor:pointer;color:var(--t3);background:transparent;
+  transition:all 0.2s;letter-spacing:0.2px;
+}
+.tab-btn.active{background:rgba(255,255,255,0.06);color:var(--t1);border-bottom:2px solid var(--blue);}
+.tab-btn:hover:not(.active){color:var(--t2);}
+
+.panel-page{flex:1;overflow-y:auto;overflow-x:hidden;display:none;padding:11px;}
+.panel-page.active{display:block;}
+.panel-page::-webkit-scrollbar{width:0;}
+
+.sec{margin-bottom:12px;}
+.sec-lbl{font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:8px;padding:0 2px;}
+
+.gc{background:var(--g1);border:1px solid var(--gbd);border-radius:var(--rmd);padding:12px;transition:border-color 0.3s;}
+.gc.good  {border-color:rgba(34,197,94,0.3);}
+.gc.warn  {border-color:rgba(234,179,8,0.3);}
+.gc.danger{border-color:rgba(239,68,68,0.35);background:rgba(239,68,68,0.04);}
+
+/* DETECTION CARDS */
+.det-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:9px;}
+.det-card{
+  border-radius:var(--rmd);padding:11px 10px;
+  border:1px solid rgba(255,255,255,0.07);
+  background:rgba(255,255,255,0.025);transition:all 0.32s;
+}
+.det-card.t-shoulder{background:rgba(249,115,22,0.09); border-color:rgba(249,115,22,0.34);}
+.det-card.t-turtle  {background:rgba(168,85,247,0.09); border-color:rgba(168,85,247,0.34);}
+.det-card.t-tilt    {background:rgba(6,182,212,0.09);  border-color:rgba(6,182,212,0.34);}
+.det-card.t-neck    {background:rgba(239,68,68,0.09);  border-color:rgba(239,68,68,0.34);}
+.det-card.t-trunk   {background:rgba(234,179,8,0.09);  border-color:rgba(234,179,8,0.34);}
+
+/* detection card icon using a small colored marker */
+.det-mark{width:10px;height:10px;border-radius:50%;margin-bottom:7px;flex-shrink:0;}
+.m-shoulder{background:var(--orange);}
+.m-turtle  {background:var(--purple);}
+.m-tilt    {background:var(--cyan);}
+.m-neck    {background:var(--red);}
+.m-trunk   {background:var(--yellow);}
+
+.det-name{font-size:10px;font-weight:700;color:var(--t2);margin-bottom:4px;letter-spacing:0.3px;}
+.det-val{font-size:20px;font-weight:800;font-family:var(--mono);color:var(--t3);transition:color 0.3s;}
+.det-val.c-shoulder{color:var(--orange);}
+.det-val.c-turtle  {color:var(--purple);}
+.det-val.c-tilt    {color:var(--cyan);}
+.det-val.c-neck    {color:var(--red);}
+.det-val.c-trunk   {color:var(--yellow);}
+.det-unit{font-size:9px;color:var(--t3);margin-top:1px;}
+.det-status{margin-top:5px;font-size:10px;font-weight:700;letter-spacing:0.3px;color:var(--t3);transition:color 0.3s;}
+.det-status.ok{color:var(--green);}
+.det-status.bad-shoulder{color:var(--orange);}
+.det-status.bad-turtle  {color:var(--purple);}
+.det-status.bad-tilt    {color:var(--cyan);}
+.det-status.bad-neck    {color:var(--red);}
+.det-status.bad-trunk   {color:var(--yellow);}
+
+/* Tilt full row */
+.tilt-row{
+  border-radius:var(--rmd);padding:10px 13px;
+  border:1px solid rgba(255,255,255,0.07);
+  background:rgba(255,255,255,0.025);
+  display:flex;align-items:center;justify-content:space-between;
+  transition:all 0.32s;margin-bottom:9px;
+}
+.tilt-row.t-tilt{background:rgba(6,182,212,0.09);border-color:rgba(6,182,212,0.34);}
+.tr-left{display:flex;align-items:center;gap:9px;}
+.tr-mark{width:12px;height:12px;border-radius:50%;background:var(--cyan);}
+.tr-info{}
+.tr-name{font-size:10px;font-weight:700;color:var(--t2);}
+.tr-dir {font-size:10px;color:var(--t3);margin-top:1px;}
+.tr-right{text-align:right;}
+.tr-val{font-size:22px;font-weight:800;font-family:var(--mono);color:var(--t3);transition:color 0.3s;}
+.tr-val.active{color:var(--cyan);}
+.tr-sub{font-size:10px;color:var(--t3);margin-top:1px;}
+
+/* RULA ring */
+.rula-grand-row{display:flex;align-items:center;gap:12px;margin-bottom:9px;}
+.ring-wrap{position:relative;width:66px;height:66px;flex-shrink:0;}
+.r-svg{width:66px;height:66px;transform:rotate(-90deg);}
+.r-bg{fill:none;stroke:rgba(255,255,255,0.06);stroke-width:5;}
+.r-fill{fill:none;stroke:var(--green);stroke-width:5;stroke-linecap:round;stroke-dasharray:188.5;stroke-dashoffset:188.5;transition:stroke-dashoffset 0.6s ease,stroke 0.4s;}
+.r-fill.warn  {stroke:var(--yellow);}
+.r-fill.danger{stroke:var(--red);}
+.r-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;font-family:var(--mono);color:var(--green);transition:color 0.3s;}
+.r-num.warn  {color:var(--yellow);}
+.r-num.danger{color:var(--red);}
+.r-num.na    {color:var(--t3);font-size:16px;}
+.rula-info{}
+.rula-lv{font-size:12px;font-weight:700;color:var(--green);margin-bottom:2px;transition:color 0.3s;}
+.rula-lv.warn  {color:var(--yellow);}
+.rula-lv.danger{color:var(--red);}
+.rula-act{font-size:10px;color:var(--t2);line-height:1.5;}
+
+.ab-row{display:flex;overflow:hidden;border-radius:var(--rsm);border:1px solid var(--gbd);background:rgba(255,255,255,0.025);margin-bottom:9px;}
+.ab-cell{flex:1;padding:8px 10px;text-align:center;border-right:1px solid var(--gbd);}
+.ab-cell:last-child{border-right:none;}
+.ab-lbl{font-size:9px;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:2px;}
+.ab-val{font-size:17px;font-weight:800;font-family:var(--mono);color:var(--cyan);}
+
+/* Score chips */
+.s-chips{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;}
+.s-chip{background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.07);border-radius:var(--rsm);padding:8px 5px;text-align:center;transition:all 0.3s;}
+.s-chip.good  {border-color:rgba(34,197,94,0.25);background:rgba(34,197,94,0.05);}
+.s-chip.warn  {border-color:rgba(234,179,8,0.28);background:rgba(234,179,8,0.05);}
+.s-chip.danger{border-color:rgba(239,68,68,0.3); background:rgba(239,68,68,0.05);}
+.s-chip.static{box-shadow:0 0 0 1px rgba(234,179,8,0.55) inset;}
+.sc-lbl{font-size:9px;color:var(--t3);font-weight:700;text-transform:uppercase;margin-bottom:3px;letter-spacing:0.5px;}
+.sc-val{font-size:20px;font-weight:800;font-family:var(--mono);color:var(--green);transition:color 0.3s;}
+.sc-val.warn  {color:var(--yellow);}
+.sc-val.danger{color:var(--red);}
+.sc-val.na    {color:var(--t3);font-size:14px;}
+
+/* Angle items */
+.ang-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.ang-item{display:flex;flex-direction:column;gap:4px;}
+.ang-hdr{display:flex;justify-content:space-between;align-items:baseline;}
+.ang-name{font-size:10px;color:var(--t3);font-weight:600;}
+.ang-vw{display:flex;align-items:baseline;gap:2px;}
+.ang-val{font-size:19px;font-weight:800;font-family:var(--mono);color:var(--green);transition:color 0.3s;}
+.ang-val.warn  {color:var(--yellow);}
+.ang-val.danger{color:var(--red);}
+.ang-val.na    {color:var(--t3);font-size:13px;}
+.ang-unit{font-size:10px;color:var(--t3);}
+.ang-raw {font-size:10px;color:var(--t3);font-family:var(--mono);}
+.bar-bg{height:3px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;}
+.bar-f{height:100%;background:var(--green);border-radius:3px;transition:width 0.2s ease,background 0.3s;width:0%;}
+.bar-f.warn  {background:var(--yellow);}
+.bar-f.danger{background:var(--red);}
+
+/* Confidence */
+.conf-val{font-size:17px;font-weight:800;font-family:var(--mono);color:var(--green);transition:color 0.3s;}
+.conf-val.warn  {color:var(--yellow);}
+.conf-val.danger{color:var(--red);}
+
+/* Timer */
+.timer-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.t-item{background:rgba(255,255,255,0.025);border:1px solid var(--gbd);border-radius:var(--rsm);padding:9px 11px;text-align:center;}
+.t-lbl{font-size:9px;color:var(--t3);font-weight:700;text-transform:uppercase;margin-bottom:3px;letter-spacing:0.5px;}
+.t-val{font-size:18px;font-weight:800;font-family:var(--mono);color:var(--t1);}
+.t-val.bad {color:var(--red);}
+.t-val.warn{color:var(--yellow);}
+
+/* Streak */
+.streak-wrap{margin-top:8px;}
+.streak-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;}
+.streak-lbl{font-size:10px;color:var(--t3);}
+.streak-v{font-size:12px;font-weight:800;font-family:var(--mono);color:var(--yellow);}
+.streak-v.fired{color:var(--red);}
+.beep-bg{height:5px;background:rgba(255,255,255,0.05);border-radius:5px;overflow:hidden;}
+.beep-f{height:100%;background:linear-gradient(90deg,var(--yellow),var(--orange));border-radius:5px;transition:width 0.15s linear;width:0%;}
+.beep-f.alert{background:linear-gradient(90deg,var(--orange),var(--red));}
+.streak-ticks{display:flex;justify-content:space-between;margin-top:3px;}
+.stk{font-size:9px;color:var(--t3);font-family:var(--mono);}
+
+/* Cal state */
+.cal-state{background:rgba(255,255,255,0.025);border:1px solid var(--gbd);border-radius:var(--rsm);padding:9px 11px;font-size:11px;color:var(--t3);line-height:1.6;}
+.cal-state.calibrated{border-color:rgba(34,197,94,0.3);color:var(--green);background:rgba(34,197,94,0.05);}
+.cal-offs{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;font-size:10px;color:var(--t3);}
+.cal-ov{color:var(--cyan);font-weight:700;font-family:var(--mono);}
+
+#triggerCalBtn,#exportBtn,#reportBtn{
+  width:100%;margin-top:8px;padding:11px;
+  border-radius:var(--rsm);font-size:12px;font-weight:700;font-family:var(--ui);
+  cursor:pointer;transition:all 0.2s;letter-spacing:0.2px;
+}
+#triggerCalBtn{background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.28);color:var(--blue);}
+#triggerCalBtn:hover:not(:disabled){background:rgba(59,130,246,0.2);transform:translateY(-1px);}
+#triggerCalBtn:disabled{opacity:0.28;cursor:not-allowed;}
+#exportBtn{background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.28);color:var(--green);}
+#exportBtn:hover:not(:disabled){background:rgba(34,197,94,0.2);transform:translateY(-1px);}
+#exportBtn:disabled{opacity:0.28;cursor:not-allowed;}
+#reportBtn{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.28);color:var(--red);}
+#reportBtn:hover:not(:disabled){background:rgba(239,68,68,0.2);transform:translateY(-1px);}
+#reportBtn:disabled{opacity:0.28;cursor:not-allowed;}
+
+.static-note{font-size:10px;color:var(--yellow);text-align:center;margin:-3px 0 9px;line-height:1.5;}
+.scope-box{margin-top:2px;border:1px solid var(--gbd);border-radius:var(--rsm);background:rgba(255,255,255,0.025);}
+.scope-box>summary{cursor:pointer;padding:8px 10px;font-size:11px;font-weight:700;color:var(--t2);}
+.scope-box>summary:focus-visible{outline:2px solid var(--blue);outline-offset:2px;}
+.scope-list{padding:2px 12px 8px 26px;font-size:10px;line-height:1.65;color:var(--t2);}
+.scope-list li{margin-bottom:3px;}
+.scope-note{padding:0 10px 9px;font-size:10px;line-height:1.55;color:var(--t2);}
+.ga-default{display:none;margin:0 0 9px;padding:7px 10px;border:1px solid rgba(234,179,8,0.3);background:rgba(234,179,8,0.06);border-radius:var(--rsm);font-size:10px;line-height:1.6;color:var(--yellow);}
+.th-cap{font-size:10px;line-height:1.55;color:var(--t2);margin:0 0 8px;}
+.th-src{font-size:9px;line-height:1.5;color:var(--t2);margin:-1px 0 5px;}
+
+#chartCanvas{width:100%;height:76px;display:block;border-radius:var(--rsm);border:1px solid var(--gbd);}
+.chart-legend{display:flex;gap:9px;margin-top:6px;flex-wrap:wrap;}
+.leg{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--t3);}
+.leg-line{width:14px;height:2.5px;border-radius:2px;}
+
+.export-stat{display:flex;justify-content:space-between;align-items:center;background:rgba(255,255,255,0.025);border:1px solid var(--gbd);border-radius:var(--rsm);padding:9px 12px;font-size:11px;margin-bottom:8px;}
+.es-lbl{color:var(--t2);}
+.es-val{color:var(--cyan);font-weight:700;font-family:var(--mono);}
+
+.th-gt{font-size:9px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;}
+.th-row{display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px;}
+.th-n{color:var(--t2);}
+.th-v{color:var(--cyan);font-weight:700;font-family:var(--mono);}
+.divider{height:1px;background:var(--gbd);margin:8px -11px 10px;}
+
+.arm-note{background:rgba(59,130,246,0.05);border:1px solid rgba(59,130,246,0.12);border-radius:var(--rsm);padding:7px 9px;font-size:10px;color:var(--t3);line-height:1.6;margin-bottom:9px;}
+.arm-note b{color:var(--cyan);}
+
+.ema-row{display:flex;justify-content:space-between;align-items:center;margin-top:9px;}
+.ema-lbl{font-size:10px;color:var(--t3);}
+.ema-tog{font-size:10px;font-weight:700;padding:3px 10px;border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:var(--t3);background:rgba(255,255,255,0.04);cursor:pointer;transition:all 0.2s;}
+.ema-tog.on{border-color:rgba(59,130,246,0.4);color:var(--blue);background:rgba(59,130,246,0.1);}
+.view-note{font-size:10px;color:var(--t3);margin:0 2px 8px;line-height:1.55;font-family:var(--mono);}
+.view-note.bad{color:var(--yellow);}
+.chip-wake{display:none;}
+.chip-wake.ok{background:rgba(34,197,94,0.13);color:var(--green);border:1px solid rgba(34,197,94,0.28);}
+.chip-wake.warn{background:rgba(249,115,22,0.12);color:var(--orange);border:1px solid rgba(249,115,22,0.28);}
+.interrupt-banner{position:absolute;top:64px;left:50%;transform:translateX(-50%);z-index:14;display:none;text-align:center;padding:10px 18px;border-radius:12px;backdrop-filter:blur(16px);max-width:80%;}
+.interrupt-banner.show{display:block;}
+.interrupt-banner.bad{background:rgba(239,68,68,0.2);border:1px solid rgba(239,68,68,0.5);color:var(--red);}
+.interrupt-banner.ok{background:rgba(34,197,94,0.16);border:1px solid rgba(34,197,94,0.4);color:var(--green);}
+.ib-t{font-size:13px;font-weight:800;}
+.ib-s{font-size:10px;opacity:.85;margin-top:2px;}
+
+/* ═══════════ 響應式／無障礙層（僅介面；不影響偵測與評分） ═══════════ */
+:root{
+  /* 資訊文字對比：--t3 原為 0.28（約 2.4:1）；0.52 於最亮之卡片底色上仍 ≥4.5:1 */
+  --t3:rgba(255,255,255,0.52);
+  /* 深色底上的文字用色（填色／邊框／光暈仍用原 --red／--purple／--blue） */
+  --red-t:#f87171; --purple-t:#c084fc; --blue-t:#60a5fa;
+  --sat:env(safe-area-inset-top,0px); --sar:env(safe-area-inset-right,0px);
+  --sab:env(safe-area-inset-bottom,0px); --sal:env(safe-area-inset-left,0px);
+}
+
+/* 瀏海／底部手勢條（桌面各值為 0，外觀不變） */
+header{padding:calc(9px + var(--sat)) calc(18px + var(--sar)) 9px calc(18px + var(--sal));}
+.rula-badge{left:calc(12px + var(--sal));}
+.fps-pill{right:calc(12px + var(--sar));}
+.alert-pills{left:calc(12px + var(--sal));bottom:calc(14px + var(--sab));max-width:calc(100% - 24px - var(--sal) - var(--sar));}
+.tab-row{padding:10px calc(10px + var(--sar)) 0 10px;}
+.panel-page{padding:11px calc(11px + var(--sar)) calc(11px + var(--sab)) 11px;}
+#launchScreen{justify-content:flex-start;padding:var(--sat) var(--sar) var(--sab) var(--sal);}
+.l-inner{margin-top:auto;margin-bottom:auto;}
+#calOverlay{justify-content:flex-start;overflow-y:auto;padding:var(--sat) var(--sar) var(--sab) var(--sal);}
+.cal-box{margin:auto;}
+
+/* 對比度：承載資訊的彩色文字改用較亮色（填色不變） */
+.chip-ema,.g-num,.ema-tog.on,#triggerCalBtn,.th-gt{color:var(--blue-t);}
+.rb-lv.danger,.rula-lv.danger,.conf-val.danger,.t-val.bad,.streak-v.fired,.det-status.bad-neck,#reportBtn,.err-h,.interrupt-banner.bad{color:var(--red-t);}
+.det-status.bad-turtle{color:var(--purple-t);}
+.low-conf-warning{color:#fca5a5;}
+.err-code{color:rgba(255,160,160,0.9);}
+.no-detect{color:rgba(255,255,255,0.82);background:rgba(0,0,0,0.55);}
+.fps-pill{color:rgba(255,255,255,0.82);background:rgba(0,0,0,0.6);}
+.ap.ap-sh,.ap.ap-tu,.ap.ap-ti,.ap.ap-nk,.ap.ap-tr{color:var(--t1);}
+
+/* 警示膠囊：未顯示時自無障礙樹移除（保留淡出動畫） */
+.ap{transition:opacity 0.25s,transform 0.25s,visibility 0s linear 0.25s;}
+.ap:not(.show){visibility:hidden;}
+.ap.show{visibility:visible;transition-delay:0s;}
+
+/* 鍵盤焦點 */
+button:focus-visible,summary:focus-visible,[role="tab"]:focus-visible{outline:2px solid #93c5fd;outline-offset:2px;}
+.tab-btn:focus-visible{outline-offset:-2px;}
+.panel-page:focus-visible{outline:2px solid #93c5fd;outline-offset:-2px;}
+
+/* 觸控目標 ≥44px（觸控裝置、窄螢幕或直向） */
+@media (pointer:coarse),(max-width:767.98px),(orientation:portrait){
+  .tab-btn,#pauseBtn,#flipBtn,#startBtn,#triggerCalBtn,#exportBtn,#reportBtn,#calStartBtn,#calCancelBtn,.po-resume,.ema-tog{min-height:44px;}
+  #pauseBtn,#flipBtn{min-width:44px;justify-content:center;}
+  .ema-tog{min-width:44px;display:inline-flex;align-items:center;justify-content:center;}
+  #calCancelBtn{min-width:44px;padding:0 14px;display:inline-flex;align-items:center;justify-content:center;}
+  .scope-box>summary{padding-top:13px;padding-bottom:13px;}
+}
+
+/* 窄螢幕或直向：影像在上、面板在下；影像區長寬比跟隨串流（--cam-ar 由下方腳本依實際串流設定），
+   使顯示區與影像同比例（object-fit:cover 不裁切，骨架疊圖與角度換算所用之座標不失真） */
+@media (max-width:767.98px),(orientation:portrait){
+  html,body{height:100vh;height:100dvh;}
+  header{flex-wrap:wrap;gap:6px 10px;}
+  .hdr-right{width:100%;}
+  main{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);z-index:auto;}
+  .cam-wrap{justify-self:center;width:100%;
+    width:min(100%,calc(50vh * var(--cam-ar-num,1.7778)));
+    width:min(100%,calc(50dvh * var(--cam-ar-num,1.7778)));
+    aspect-ratio:var(--cam-ar,16 / 9);}
+  .side-panel{border-left:0;border-top:1px solid var(--gbd);min-height:0;}
+  #launchScreen,#calOverlay{position:fixed;z-index:40;}
+}
+
+/* 減少動態：停用背景漂移、環形脈動、膠囊閃爍等；紅色邊框保留為靜態紅框（報告 3.5.2 層次四之替代通道） */
+@media (prefers-reduced-motion:reduce){
+  .bg-blob,.l-ring,.l-icon,.ap-dot,.cal-cd,.po-box,.cal-box,.l-inner,#flipBtn.switching svg,#startBtn.loading .btn-sp{animation:none !important;}
+  .danger-vfx.on{animation:none !important;box-shadow:inset 0 0 90px rgba(239,68,68,0.32),inset 0 0 0 4px rgba(239,68,68,0.65);}
+  *,*::before,*::after{transition-duration:0.01ms !important;transition-delay:0s !important;}
+}
+</style>
+</head>
+<body>
+
+<div class="bg-layer">
+  <div class="bg-blob"></div><div class="bg-blob"></div><div class="bg-blob"></div>
+</div>
+
+<header>
+  <div class="logo-mark">
+    <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+  </div>
+  <div class="logo-words">
+    <div class="logo-title">學生坐姿矯正系統</div>
+    <div class="logo-sub" id="logoSub">RULA（簡化實作）· Group A+B · MediaPipe · CVA · 軀幹前傾(輔) · 側傾 · 矯正箭頭</div>
+  </div>
+  <div class="hdr-right">
+    <span class="chip chip-off"  id="statusBadge">OFFLINE</span>
+    <span class="chip chip-live" id="liveBadge">LIVE</span>
+    <span class="chip chip-paused" id="pausedBadge">PAUSED</span>
+    <span class="chip chip-http" id="httpsBadge">HTTP</span>
+    <span class="chip chip-ema"  id="emaBadge">EMA</span>
+    <span class="chip chip-cal"  id="calBadge">CAL</span>
+    <span class="chip chip-wake" id="wakeBadge"></span>
+    <button id="pauseBtn" onclick="togglePause()" title="暫停 / 繼續監測" aria-label="暫停監測">
+      <svg id="pauseIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+      <span id="pauseBtnLabel">暫停</span>
+    </button>
+    <button id="flipBtn" onclick="flipCamera()" title="切換前後鏡頭" aria-label="切換鏡頭（前後鏡頭）">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-9"/><path d="M14 17H5"/><polyline points="15 2 20 7 15 12"/><polyline points="9 22 4 17 9 12"/></svg>
+      切換鏡頭
+    </button>
+  </div>
+</header>
+
+<main>
+  <div class="cam-wrap" id="camArea">
+
+    <!-- LAUNCH SCREEN -->
+    <div id="launchScreen">
+      <div class="l-rings">
+        <div class="l-ring"></div><div class="l-ring"></div>
+        <div class="l-ring"></div><div class="l-ring"></div>
+      </div>
+      <div class="l-inner">
+        <div class="l-icon">
+          <!-- Human figure SVG -->
+          <svg viewBox="0 0 48 48">
+            <circle cx="24" cy="8" r="4"/>
+            <line x1="24" y1="12" x2="24" y2="28"/>
+            <line x1="14" y1="18" x2="34" y2="18"/>
+            <line x1="24" y1="28" x2="16" y2="42"/>
+            <line x1="24" y1="28" x2="32" y2="42"/>
+          </svg>
+        </div>
+        <div class="l-title">學生<span class="l-name">坐姿矯正系統</span></div>
+        <div class="l-sub">RULA（簡化實作）· Group A+B · MediaPipe · EMA<br>即時偵測 · 矯正箭頭引導</div>
+        <div class="feat-strip">
+          <span class="feat-badge fb-orange" id="featSh">軀幹前傾（輔助）</span>
+          <span class="feat-badge fb-purple" id="featTu">前頭姿勢 CVA</span>
+          <span class="feat-badge fb-cyan">身體側傾</span>
+          <span class="feat-badge fb-green">矯正箭頭</span>
+        </div>
+        <div id="httpsCard">
+          <div class="ht-t">安全連線提醒</div>
+          <div class="ht-b">目前使用 <code>HTTP</code>，攝影機可能被封鎖。<br>請改用 <code>https://</code> 或 <code>localhost</code></div>
+        </div>
+        <div class="guide-block">
+          <div class="gb-title">使用引導</div>
+          <div class="gb-steps">
+            <div class="g-step"><span class="g-num">1</span><span class="g-txt">點擊「啟動攝影機」，允許瀏覽器攝影機權限</span></div>
+            <div class="g-step"><span class="g-num">2</span><span class="g-txt">確保<b>耳、肩、肘、腕、髖</b>皆在畫面中</span></div>
+            <div class="g-step"><span class="g-num">3</span><span class="g-txt">點選「開始校準」建立基準，自動計算 RULA（簡化實作）分數</span></div>
+            <div class="g-step"><span class="g-num">4</span><span class="g-txt">偵測到不良姿勢時，畫面出現<b>矯正箭頭</b>引導調整方向</span></div>
+          </div>
+        </div>
+        <button id="startBtn" onclick="handleStart()"><span class="btn-sp">&#9654;</span> 啟動攝影機</button>
+        <div id="errCard">
+          <div class="err-h"><span id="errTitle">無法存取攝影機</span></div>
+          <div class="err-code" id="errCode"></div>
+          <div class="err-msg" id="errMsg"></div>
+        </div>
+      </div>
+    </div>
+
+    <video id="video" autoplay playsinline muted aria-label="即時攝影機畫面"></video>
+    <canvas id="canvas" aria-hidden="true"></canvas>
+    <div class="danger-vfx" id="dangerVfx"></div>
+    <div class="no-detect" id="noDetect" role="status" aria-live="polite">偵測中…<br>請確認上半身在畫面中</div>
+    <div class="low-conf-warning" id="lowConfWarn" role="status" aria-live="polite">
+      偵測信心不足
+      <div class="lcw-sub">RULA 評分已暫停・請靠近鏡頭或改善光線</div>
+    </div>
+    <div class="paused-overlay" id="pausedOverlay">
+      <div class="po-box" role="status" aria-live="polite">
+        <div class="po-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+        </div>
+        <div class="po-title">監測已暫停</div>
+        <div class="po-sub">攝影機畫面持續，但姿勢偵測與計時已停止</div>
+        <button class="po-resume" onclick="togglePause()">&#9654; 繼續監測</button>
+      </div>
+    </div>
+    <div class="fps-pill" id="fpsTag">--</div>
+    <div class="interrupt-banner" id="interruptBanner" role="status" aria-live="polite" aria-atomic="true"><div class="ib-t"></div><div class="ib-s"></div></div>
+
+    <!-- RULA badge — hidden until active -->
+    <div class="rula-badge" id="rulaBadge" style="display:none">
+      <div class="rb-score" id="badgeScore">-</div>
+      <div>
+        <div class="rb-label">Grand（簡化）</div>
+        <div class="rb-lv" id="badgeLv">等待偵測</div>
+      </div>
+    </div>
+
+    <!-- Alert pills -->
+    <div class="alert-pills" id="alertPills" role="status" aria-live="polite" aria-label="姿勢警示">
+      <div class="ap ap-sh" id="pillShoulder"><span class="ap-dot"></span><span id="pillShoulderTxt">圓肩</span></div>
+      <div class="ap ap-tu" id="pillTurtle">  <span class="ap-dot"></span><span id="pillTurtleTxt">烏龜頸</span></div>
+      <div class="ap ap-ti" id="pillTilt">    <span class="ap-dot"></span>身體側傾</div>
+      <div class="ap ap-nk" id="pillNeck">    <span class="ap-dot"></span>頸部前傾</div>
+      <div class="ap ap-tr" id="pillTrunk">   <span class="ap-dot"></span>軀幹彎曲</div>
+    </div>
+
+    <!-- Calibration overlay -->
+    <div id="calOverlay">
+      <div class="cal-box">
+        <div class="cal-t">姿勢校準</div>
+        <div class="cal-s">系統將捕捉您的「標準坐姿」作為 0° 基準<br>請確認上半身全入鏡後再按開始</div>
+        <div class="cal-stat" id="calStatus">— 偵測入鏡中 —</div>
+        <div class="cal-checks">
+          <div class="ck-item"><div class="ck-dot" id="chkEar"></div><div class="ck-lbl">耳朵</div></div>
+          <div class="ck-item"><div class="ck-dot" id="chkSh"></div> <div class="ck-lbl">肩膀</div></div>
+          <div class="ck-item"><div class="ck-dot" id="chkElb"></div><div class="ck-lbl">手肘</div></div>
+          <div class="ck-item"><div class="ck-dot" id="chkWr"></div> <div class="ck-lbl">手腕</div></div>
+          <div class="ck-item"><div class="ck-dot" id="chkHip"></div><div class="ck-lbl">髖部</div></div>
+        </div>
+        <div class="cal-cd" id="calCountdown">3</div>
+        <div class="cal-done" id="calDoneMsg">校準完成</div>
+        <button id="calStartBtn" onclick="startCalibration()" disabled>開始校準（需全身入鏡）</button>
+        <button id="calCancelBtn" onclick="closeCalOverlay()">取消</button>
+      </div>
+    </div>
+
+  </div><!-- /cam-wrap -->
+
+  <!-- RIGHT PANEL -->
+  <div class="side-panel">
+    <div class="tab-row" role="tablist" aria-label="資訊面板分頁">
+      <button class="tab-btn active" id="tabPosture" role="tab" aria-selected="true" aria-controls="pagePosture" tabindex="0" onclick="switchTab('posture')">姿勢</button>
+      <button class="tab-btn"        id="tabAngles"  role="tab" aria-selected="false" aria-controls="pageAngles" tabindex="-1" onclick="switchTab('angles')">角度</button>
+      <button class="tab-btn"        id="tabRula"    role="tab" aria-selected="false" aria-controls="pageRula" tabindex="-1" onclick="switchTab('rula')">RULA</button>
+      <button class="tab-btn"        id="tabData"    role="tab" aria-selected="false" aria-controls="pageData" tabindex="-1" onclick="switchTab('data')">數據</button>
+    </div>
+
+    <!-- TAB: POSTURE -->
+    <div class="panel-page active" id="pagePosture" role="tabpanel" aria-labelledby="tabPosture" tabindex="0">
+      <div class="sec">
+        <div class="sec-lbl">偵測信心度</div>
+        <div class="gc">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:11px;color:var(--t2);">關鍵點平均可信度</span>
+            <span class="conf-val" id="confVal">--%</span>
+          </div>
+          <div class="bar-bg" style="margin-top:6px"><div class="bar-f" id="confBar"></div></div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-lbl">姿勢偵測模組</div>
+        <div class="ema-row" style="margin:0 0 6px">
+          <span class="ema-lbl">偵測演算法（顯示／警示用）</span>
+          <button class="ema-tog on" id="modeToggle" onclick="toggleDetMode()">新版 CVA</button>
+        </div>
+        <div class="view-note" id="viewNote">視角 —</div>
+        <div class="det-grid">
+          <div class="det-card" id="cardShoulder">
+            <div class="det-mark m-shoulder"></div>
+            <div class="det-name" id="dShName">圓肩</div>
+            <div class="det-val" id="dShVal">--</div>
+            <div class="det-unit" id="dShUnit">肩髖水平距</div>
+            <div class="det-status" id="dShStat">—</div>
+          </div>
+          <div class="det-card" id="cardTurtle">
+            <div class="det-mark m-turtle"></div>
+            <div class="det-name" id="dTuName">烏龜頸</div>
+            <div class="det-val" id="dTuVal">--</div>
+            <div class="det-unit" id="dTuUnit">頭部前伸量</div>
+            <div class="det-status" id="dTuStat">—</div>
+          </div>
+        </div>
+        <div class="tilt-row" id="cardTilt">
+          <div class="tr-left">
+            <div class="tr-mark"></div>
+            <div class="tr-info">
+              <div class="tr-name">身體左右側傾</div>
+              <div class="tr-dir" id="dTiDir">方向 —</div>
+            </div>
+          </div>
+          <div class="tr-right">
+            <div class="tr-val" id="dTiVal">--°</div>
+            <div class="tr-sub">肩線角度</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-lbl">RULA 總覽</div>
+        <div class="gc" id="rulaCardP">
+          <div class="rula-grand-row">
+            <div class="ring-wrap">
+              <svg class="r-svg" viewBox="0 0 72 72">
+                <circle class="r-bg" cx="36" cy="36" r="30"/>
+                <circle class="r-fill" id="rulaRingP" cx="36" cy="36" r="30"/>
+              </svg>
+              <div class="r-num na" id="rulaNumP">-</div>
+            </div>
+            <div class="rula-info">
+              <div class="rula-lv" id="rulaLvP">等待偵測</div>
+              <div class="rula-act" id="rulaActP">請啟動攝影機</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-lbl">姿勢計時</div>
+        <div class="timer-grid">
+          <div class="t-item"><div class="t-lbl">Session</div><div class="t-val" id="tSession">00:00</div></div>
+          <div class="t-item"><div class="t-lbl">不良姿勢</div><div class="t-val bad" id="tBad">00:00</div></div>
+          <div class="t-item" style="grid-column:1/-1"><div class="t-lbl">不良比例</div><div class="t-val warn" id="tPct">--%</div></div>
+        </div>
+        <div class="streak-wrap">
+          <div class="streak-hdr">
+            <span class="streak-lbl">連續不良（觸發 ≥3s）</span>
+            <span class="streak-v" id="streakVal">0.0s</span>
+          </div>
+          <div class="beep-bg"><div class="beep-f" id="beepBar"></div></div>
+          <div class="streak-ticks">
+            <span class="stk">0s</span>
+            <span class="stk" style="color:var(--yellow)">警示 @3s</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="sec">
+        <div class="sec-lbl">姿勢校準</div>
+        <div class="cal-state" id="calStateCard">尚未校準 — 使用垂直絕對角度</div>
+        <div class="cal-offs" id="calOffsetRow" style="display:none">
+          <span>頸 <span class="cal-ov" id="calNeckOff">--°</span></span>
+          <span>幹 <span class="cal-ov" id="calTrunkOff">--°</span></span>
+        </div>
+        <button id="triggerCalBtn" onclick="openCalOverlay()" disabled>開始校準</button>
+      </div>
+    </div>
+
+    <!-- TAB: ANGLES -->
+    <div class="panel-page" id="pageAngles" role="tabpanel" aria-labelledby="tabAngles" tabindex="0">
+      <div class="sec">
+        <div class="sec-lbl">Group B — 頸幹腿部</div>
+        <div class="gc" style="margin-bottom:8px">
+          <div class="ang-item" style="margin-bottom:10px">
+            <div class="ang-hdr"><span class="ang-name">頸部前傾</span><div class="ang-vw"><span class="ang-val" id="neckVal">--</span><span class="ang-unit">°</span></div></div>
+            <div class="ang-raw" id="neckRawLbl">原始: -- °</div>
+            <div class="bar-bg" style="margin-top:4px"><div class="bar-f" id="neckBar"></div></div>
+          </div>
+          <div class="ang-item">
+            <div class="ang-hdr"><span class="ang-name">軀幹彎曲</span><div class="ang-vw"><span class="ang-val" id="trunkVal">--</span><span class="ang-unit">°</span></div></div>
+            <div class="ang-raw" id="trunkRawLbl">原始: -- °</div>
+            <div class="bar-bg" style="margin-top:4px"><div class="bar-f" id="trunkBar"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="sec">
+        <div class="sec-lbl">Group A — 上肢</div>
+        <div class="arm-note"><b>偵測說明：</b>手肘與手腕需入鏡才能計算 Group A。</div>
+        <div class="gc" style="margin-bottom:8px">
+          <div class="ang-grid">
+            <div class="ang-item"><div class="ang-hdr"><span class="ang-name">上臂 L</span><div class="ang-vw"><span class="ang-val" id="uaLVal">--</span><span class="ang-unit">°</span></div></div><div class="bar-bg"><div class="bar-f" id="uaLBar"></div></div></div>
+            <div class="ang-item"><div class="ang-hdr"><span class="ang-name">上臂 R</span><div class="ang-vw"><span class="ang-val" id="uaRVal">--</span><span class="ang-unit">°</span></div></div><div class="bar-bg"><div class="bar-f" id="uaRBar"></div></div></div>
+            <div class="ang-item"><div class="ang-hdr"><span class="ang-name">下臂 L</span><div class="ang-vw"><span class="ang-val" id="laLVal">--</span><span class="ang-unit">°</span></div></div><div class="bar-bg"><div class="bar-f" id="laLBar"></div></div></div>
+            <div class="ang-item"><div class="ang-hdr"><span class="ang-name">下臂 R</span><div class="ang-vw"><span class="ang-val" id="laRVal">--</span><span class="ang-unit">°</span></div></div><div class="bar-bg"><div class="bar-f" id="laRBar"></div></div></div>
+            <div class="ang-item"><div class="ang-hdr"><span class="ang-name">手腕 L</span><div class="ang-vw"><span class="ang-val" id="wrLVal">--</span><span class="ang-unit">°</span></div></div><div class="bar-bg"><div class="bar-f" id="wrLBar"></div></div></div>
+            <div class="ang-item"><div class="ang-hdr"><span class="ang-name">手腕 R</span><div class="ang-vw"><span class="ang-val" id="wrRVal">--</span><span class="ang-unit">°</span></div></div><div class="bar-bg"><div class="bar-f" id="wrRBar"></div></div></div>
+          </div>
+          <div class="ema-row">
+            <span class="ema-lbl">EMA 濾波 (α=0.2)</span>
+            <button class="ema-tog on" id="emaToggle" onclick="toggleEMA()">ON</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: RULA -->
+    <div class="panel-page" id="pageRula" role="tabpanel" aria-labelledby="tabRula" tabindex="0">
+      <div class="sec">
+        <div class="sec-lbl">RULA（簡化實作）評分</div>
+        <div class="gc" id="rulaCard" style="margin-bottom:9px">
+          <div class="rula-grand-row">
+            <div class="ring-wrap">
+              <svg class="r-svg" viewBox="0 0 72 72">
+                <circle class="r-bg" cx="36" cy="36" r="30"/>
+                <circle class="r-fill" id="rulaRingFill" cx="36" cy="36" r="30"/>
+              </svg>
+              <div class="r-num na" id="rulaNum">-</div>
+            </div>
+            <div class="rula-info">
+              <div class="rula-lv" id="rulaLv">等待偵測</div>
+              <div class="rula-act" id="rulaAct">請啟動攝影機</div>
+            </div>
+          </div>
+        </div>
+        <div class="ab-row" style="margin-bottom:9px">
+          <div class="ab-cell"><div class="ab-lbl">Group A</div><div class="ab-val" id="rulaA">-</div></div>
+          <div class="ab-cell"><div class="ab-lbl">Group B</div><div class="ab-val" id="rulaB">-</div></div>
+          <div class="ab-cell"><div class="ab-lbl">Grand（簡化）</div>  <div class="ab-val" id="rulaGrand">-</div></div>
+        </div>
+        <div class="static-note" id="staticBonusNote" style="display:none">⚡ 此分數已含靜態維持加分（頸／軀幹角度連續 60 秒內變化未超過 5°，Group B +1）</div>
+        <div class="ga-default" id="gaDefaultNote" role="status"></div>
+        <details class="scope-box" id="scopeBox">
+          <summary>評分範圍（簡化實作，非標準 RULA Grand Score）</summary>
+          <ul class="scope-list">
+            <li>Group A：未含肌肉使用與施力分數（Score C 以 Group A 代入）。</li>
+            <li>Group B：僅含靜態維持加分——頸部或軀幹角度連續 60 秒內變化未超過 5°，Group B +1（加總後上限 7）；未含動作重複性與施力分數。</li>
+            <li>腿部：固定為 1 分（前提假設，非量測結果）。</li>
+            <li>頸部：4 分以「大幅屈曲」（超過 35°）替代「伸展」。</li>
+            <li>上臂：以肩→肘連線偏離影像鉛直線計，無正負號，不區分屈曲與伸展。</li>
+            <li>不計：肩部上抬、上臂外展、上臂有支撐或倚靠；頸部或軀幹的扭轉、側彎（側傾另以輔助指標呈現，不進入 RULA 計分）；下臂跨越身體中線或向外作業；手腕偏離中線（橈尺偏）。</li>
+            <li>腕部扭轉：固定為 1 分。施力／負荷：不計（視為 2 公斤以下間歇性負荷）。</li>
+          </ul>
+          <div class="scope-note">依據專題報告表 3-8、表 3-9。展示型系統，未與人工 RULA 評分比對。</div>
+        </details>
+      </div>
+      <div class="sec">
+        <div class="sec-lbl">各部位評分</div>
+        <div class="s-chips">
+          <div class="s-chip" id="chipNeck"> <div class="sc-lbl">頸部</div><div class="sc-val na" id="chipNeckVal">-</div></div>
+          <div class="s-chip" id="chipTrunk"><div class="sc-lbl">軀幹</div><div class="sc-val na" id="chipTrunkVal">-</div></div>
+          <div class="s-chip" id="chipLeg">  <div class="sc-lbl">腿部</div><div class="sc-val na" id="chipLegVal">1</div></div>
+          <div class="s-chip" id="chipUA">   <div class="sc-lbl">上臂</div><div class="sc-val na" id="chipUAVal">-</div></div>
+          <div class="s-chip" id="chipLA">   <div class="sc-lbl">下臂</div><div class="sc-val na" id="chipLAVal">-</div></div>
+          <div class="s-chip" id="chipWR">   <div class="sc-lbl">手腕</div><div class="sc-val na" id="chipWRVal">-</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: DATA -->
+    <div class="panel-page" id="pageData" role="tabpanel" aria-labelledby="tabData" tabindex="0">
+      <div class="sec">
+        <div class="sec-lbl">角度歷史（近60幀）</div>
+        <canvas id="chartCanvas" width="296" height="76" role="img" aria-label="近 60 幀頸部、軀幹、上臂平均與圓肩指標之角度趨勢圖"></canvas>
+        <div class="chart-legend">
+          <div class="leg"><div class="leg-line" style="background:#06b6d4"></div>頸部</div>
+          <div class="leg"><div class="leg-line" style="background:#eab308"></div>軀幹</div>
+          <div class="leg"><div class="leg-line" style="background:#f97316"></div>上臂avg</div>
+          <div class="leg"><div class="leg-line" style="background:#a855f7"></div>圓肩</div>
+        </div>
+      </div>
+      <div class="sec">
+        <div class="sec-lbl">數據匯出</div>
+        <div class="export-stat">
+          <span class="es-lbl">已記錄</span>
+          <span class="es-val" id="recordCount">0 幀</span>
+        </div>
+        <div class="static-note" id="logNote" style="display:none;margin:0 0 8px"></div>
+        <button id="exportBtn" onclick="exportCSV()" disabled>下載 RULA（簡化實作）報告 CSV</button>
+        <button id="reportBtn" onclick="endSessionAndReport()" disabled>結束並產生報告</button>
+      </div>
+      <div class="sec">
+        <div class="sec-lbl">RULA 門檻參考</div>
+        <div class="gc">
+          <div class="th-cap">來源標示：「RULA 原量表」＝McAtamney &amp; Corlett (1993)；「工程設定」＝無文獻直接依據，須實測校正。</div><div class="th-gt">Group B</div>
+          <div class="th-row"><span class="th-n">頸部 正常</span><span class="th-v">&lt;10°</span></div><div class="th-src">來源：RULA 原量表</div>
+          <div class="th-row"><span class="th-n">頸部 警告</span><span class="th-v">10–20°</span></div><div class="th-src">來源：RULA 原量表</div>
+          <div class="th-row"><span class="th-n">頸部 危險</span><span class="th-v">&gt;20°</span></div><div class="th-src">來源：RULA 原量表</div>
+          <div class="th-row"><span class="th-n">軀幹 正常</span><span class="th-v">&lt;10°</span></div><div class="th-src">來源：工程設定（表 3-8：以 10° 近似原量表「有支撐」條件）</div>
+          <div class="th-row"><span class="th-n">軀幹 危險</span><span class="th-v">&gt;20°</span></div><div class="th-src">來源：RULA 原量表</div>
+          <div class="divider"></div>
+          <div class="th-gt">Group A</div>
+          <div class="th-row"><span class="th-n">上臂 中立</span><span class="th-v">0–20°</span></div><div class="th-src">來源：RULA 原量表（參考軸為影像鉛直線、無正負號，見表 3-8）</div>
+          <div class="th-row"><span class="th-n">下臂 中立</span><span class="th-v">60–100°</span></div><div class="th-src">來源：RULA 原量表</div>
+          <div class="th-row"><span class="th-n">手腕 中立</span><span class="th-v">&lt;15°</span></div><div class="th-src">來源：工程設定（較原量表寬鬆，見表 3-8）</div>
+          <div class="divider"></div>
+          <div class="th-gt">新增偵測門檻</div>
+          <div class="th-row"><span class="th-n">新版 CVA 警告</span><span class="th-v">&lt;50°（φ≥50° 才評）</span></div><div class="th-src">來源：CVA 50° 為工程設定；φ 門檻為工程啟發式</div>
+          <div class="th-row"><span class="th-n">新版 軀幹前傾(輔)</span><span class="th-v">&gt;20°（僅顯示）</span></div><div class="th-src">來源：RULA 原量表（沿用軀幹 3 分區間下限；僅顯示）</div>
+          <div class="th-row"><span class="th-n">舊版 圓肩</span><span class="th-v">肩髖偏移 &gt;15%肩寬</span></div><div class="th-src">來源：工程設定（無文獻依據）</div>
+          <div class="th-row"><span class="th-n">舊版 烏龜頸</span><span class="th-v">耳肩偏移 &gt;55%肩寬</span></div><div class="th-src">來源：工程設定（無文獻依據）</div>
+          <div class="th-row"><span class="th-n">側傾 警告</span><span class="th-v">&gt;3°（新版僅 φ&lt;60° 有效）</span></div><div class="th-src">來源：3° 程式註解未載明文獻依據；φ 門檻為工程啟發式</div>
+          <div class="th-row"><span class="th-n">偵測信心（遲滯）</span><span class="th-v">進入&lt;55%／離開&gt;65%</span></div><div class="th-src">來源：工程設定</div>
+          <div class="th-row"><span class="th-n">靜態姿勢加分</span><span class="th-v">頸/軀幹角度變化&lt;5°持續≥60s → Group B +1</span></div><div class="th-src">來源：60 秒為 RULA 原量表（靜態維持超過 1 分鐘）；5° 容許變化為工程設定（代理變項）</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1675466862/camera_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils@0.3.1675466124/drawing_utils.js" crossorigin="anonymous"></script>
+<!-- 版本鎖定：pose 版本須與下方 MP_POSE_VERSION 常數一致（locateFile 會據此載入 wasm／模型檔）。camera_utils、drawing_utils 目前程式並未使用，仍鎖版以避免供應鏈漂移；可視需要移除 -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/pose.js" crossorigin="anonymous"></script>
+<script>
+// ═══════════════════════════════════════════════
+//  CONSTANTS
+// ═══════════════════════════════════════════════
+const NECK_W=10, NECK_D=20, TRUNK_W=10, TRUNK_D=20;
+const UA_W=20, UA_D=45, LA_LO=60, LA_HI=100, WR_W=15, WR_D=30;
+const BEEP_THRESH=3, BEEP_CD=5, EMA_A=0.2, HIST=60;
+const LOG_MAX=10000; // 逐幀紀錄上限；達上限時「降採樣」（每次保留一半並將取樣間隔加倍，見 pushLog），不再靜默丟棄最舊資料
+// ═══ 舊版（legacy）門檻 — 保留供 A/B 比較 ═══
+// 依據：兩者皆為工程經驗起始值，無文獻依據。已知缺陷：以「左右肩距（肩寬）」正規化，
+//       側面視角下肩寬趨近 0 → 比值分母過小而誤觸發；僅單肩可見時 shoulderWidth=null → 恆不觸發。
+const LEGACY_SHOULDER_THR_PCT=0.15; // 舊版圓肩：肩髖水平偏移 > 15% 肩寬
+const LEGACY_TURTLE_THR_PCT  =0.55; // 舊版烏龜頸：耳肩水平偏移 > 55% 肩寬
+const TILT_THR    =3;    // 側傾：>3°（本身已是角度量測，與距離無關，維持原設計）
+// ═══ 偵測信心度：EMA＋遲滯（項目 1）═══
+const CONF_ENTER_LOW=0.55; // 平滑後信心度 < 0.55 → 進入低信心（暫停 RULA 評分）。工程設定
+const CONF_EXIT_LOW =0.65; // 平滑後信心度 > 0.65 → 離開低信心。與進入門檻相隔 0.10 形成遲滯帶，避免在單一門檻附近來回閃爍。工程設定
+const CONF_EMA_A    =0.15; // 信心度 EMA 係數（時間常數約 6 幀）。工程設定
+// ═══ 校準前絕對角度檢核（論文表 3-15 項目五）═══
+const CAL_NECK_MAX_DEG =NECK_D;  // 校準樣本平均「原始」頸角 ≥ 此值 → 拒絕校準。沿用頸部危險門檻（20°）；可依實測調整
+const CAL_TRUNK_MAX_DEG=TRUNK_D; // 同上（軀幹）
+// ═══ CDN 版本（須與 <script> 標籤一致）═══
+const MP_POSE_VERSION='0.5.1675469404';
+const STATIC_WINDOW_MS=60000; // 靜態姿勢判定：角度變化 <5° 且持續 ≥60 秒 → RULA 肌肉使用 +1
+const STATIC_DELTA=5;         // 靜態姿勢角度變化容許門檻（度）
+
+// ═══ 新版（v2）參數 ═══  每個常數皆註明依據；標「工程啟發式」者無文獻依據，須以實測校正
+const DET_MODE_DEFAULT='new';    // 'new'｜'legacy'：決定畫面顯示／警示採用哪一套；兩套皆每幀計算並寫入 CSV／報告
+const VIS_MIN=0.4;               // 特徵點可用最低 visibility，與 vis() 一致（工程設定）
+const CVA_THR_DEG=50;            // 顱脊角 CVA < 50° 判為前頭姿勢(FHP)。依據：工程設定，無文獻直接訂定之切點。參考值：Yip et al., 2008 (Man Ther 13:148–154) 之無頸痛對照組平均 55.0±2.9°、頸痛組平均 49.9±6.1°；Singla et al., 2017 (J Chiropr Med 16:131–138) 彙整之各研究平均值多約 48–57°，並指出缺乏常模。註：CVA 以 C7 棘突與耳屏定義，程式以肩點近似 C7 → 系統性偏差，見 CVA_C7_OFFSET_*；須實測校正
+const CVA_C7_OFFSET_FWD_TL=0;    // C7 相對肩點「向後」之偏移（以軀幹長為單位）。0＝直接以肩點近似 C7（會使 CVA 高估、偵測偏保守）。依據：無；須以 C7 貼標實測校正
+const CVA_C7_OFFSET_UP_TL=0;     // C7 相對肩點「向上」之偏移（以軀幹長為單位）。同上
+const TRUNK_LEAN_AUX_THR_DEG=20; // 軀幹前傾輔助指標：肩→髖連線前傾 > 20°。依據：RULA 軀幹 20–60° 計 3 分（McAtamney & Corlett, 1993）。與軀幹角度為同一量（構念不獨立），僅顯示、不觸發獨立警示
+const VIEW_SIDE_PHI_DEG=75;      // 視角 φ（肩線相對影像平面之旋轉角）≥75° 視為側面。工程啟發式
+const VIEW_MIN_PHI_DEG=50;       // φ<50° 時不評矢狀面量測（CVA／軀幹前傾）：sinφ≥0.77，水平位移最多放大 1.3 倍。工程啟發式
+const TILT_MAX_PHI_DEG=60;       // 側傾（肩線角）僅在 φ<60° 有效；側面時雙肩重疊不具效度（見 3.4.4）。工程啟發式
+const FACING_MIN_DX_PX=4;        // 鼻—耳水平差 ≥4 px 才判定臉朝向。工程設定
+const MIN_SCALE_PX=20;           // 正規化基準（軀幹長）最小像素；低於此視為不可用。工程設定
+const CONF_NEAR_SIDE_ONLY=true;  // 新版模式：偵測信心度改以「近側」耳／肩／髖三點平均計算（舊版為左右六點平均）。依據：側面視角遠側點被身體遮擋，六點平均易使側面恆判低信心而暫停 RULA（工程推論；實際 visibility 分佈待實測確認）。門檻見 CONF_ENTER_LOW／CONF_EXIT_LOW
+// ═══ 診斷面板（僅網址帶 ?debug=1 時啟用；實作見檔尾 DEBUG PANEL 區塊；不影響一般使用）═══
+const DBG_BUF_MAX=600;   // 診斷環形緩衝容量（幀）。工程設定，無文獻依據，須實測校正
+const DBG_UI_MIN_MS=100; // 診斷面板重繪最小間隔（毫秒）。工程設定，無文獻依據，須實測校正
+// ═══ 未偵測時重設畫面（C2）═══
+const NO_PERSON_CLEAR_FRAMES=5; // 連續未偵測（無人或兩肩皆不可見）達此幀數，才把即時畫面重設為「未偵測」狀態（約 0.5 秒 @10 fps；避免短暫掉幀造成閃爍）。工程設定，無文獻依據，須實測校正
+
+// ═══════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════
+let sessionStart=null, badStart=null, badTotal=0, lastBeep=0;
+let prevTs=Date.now(), fps=0;
+let neckHist=[], trunkHist=[], uaHist=[], shoulderHist=[];
+let audioCtx=null, emaOn=true;
+let emaNeck=null, emaTrunk=null;
+let emaUAL=null, emaUAR=null, emaLAL=null, emaLAR=null, emaWRL=null, emaWRR=null;
+let emaSh=null, emaTu=null, emaTi=null, emaCva=null, emaLean=null;
+let detMode=DET_MODE_DEFAULT, lastFacing=null;
+let dataLog=[], currentTab='posture';
+let isPaused=false;
+let facingMode='user', activeStream=null, activePose=null;
+let isSwitching=false, rafId=null, poseReady=false, frameRunning=false;
+let calPhase='idle', calNeckBase=0, calTrunkBase=0;
+let calCount=3, calTimer=null, calBuf=[];
+let neckStatic={ref:null,start:null,isStatic:false};
+let trunkStatic={ref:null,start:null,isStatic:false};
+let detStats=makeDetStats();
+// 暫停／背景中斷／相機中斷（gap）：Session 計時與 Elapsed_s 皆排除 gap 之「聯集」時間（項目 3、7）
+let gapStartTs=null, gapLog=[], gapOpen={pause:null,hidden:null,camera:null};
+// 信心度（項目 1）
+let emaConf=null, confLow=false;
+let absentFrames=0, liveUiCleared=false; // C2：連續未偵測幀數；畫面是否已重設
+// 幀計數與有效時間（項目 4、5）：時間為逐幀 dt 累加
+let totalFrames=0, detectedFrames=0, validFramesN=0, lowConfFrames=0, noPersonFrames=0;
+let validSec=0, lowConfSec=0, noPersonSec=0;
+let rulaAgg={w:0,sum:0,max:0,n:0};        // RULA 平均／最大值改由全部有效幀累計，不依賴（可能降採樣之）dataLog
+let logStride=1, logSeq=0, logEvents=[];   // 降採樣狀態
+// 校準（項目 10）
+let isCalibrated=false, calRejectMsg='', calRejectUntil=0, calLog=[];
+let wakeLock=null;
+const BASE_TITLE=document.title;
+const HAS_RO=(typeof ResizeObserver!=='undefined');
+
+// ── 時間格式（項目 6：一律使用本地時間，不再使用 UTC 之 ISO 字串）──
+function pad2(n){return String(n).padStart(2,'0');}
+function localStamp(d=new Date()){ // YYYY-MM-DD-HH-mm-ss（格式與舊版相同，但為本地時間）
+  return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate())+'-'+pad2(d.getHours())+'-'+pad2(d.getMinutes())+'-'+pad2(d.getSeconds());
+}
+function localClock(ts){const d=new Date(ts);return pad2(d.getHours())+':'+pad2(d.getMinutes())+':'+pad2(d.getSeconds());}
+function localDateTime(ts){const d=new Date(ts);return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate())+' '+localClock(ts);}
+function tzLabel(){const o=-new Date().getTimezoneOffset()/60;return 'UTC'+(o>=0?'+':'')+o;}
+
+// ── Tabs ──
+function switchTab(name){
+  currentTab=name;
+  ['posture','angles','rula','data'].forEach(t=>{
+    const c=t[0].toUpperCase()+t.slice(1);
+    document.getElementById('tab'+c).classList.toggle('active',t===name);
+    document.getElementById('page'+c).classList.toggle('active',t===name);
+  });
+}
+
+applyModeLabels();
+// ── Env check ──
+(function(){
+  const ok=location.protocol==='https:'||['localhost','127.0.0.1','::1'].includes(location.hostname);
+  if(!ok){document.getElementById('httpsCard').style.display='block';document.getElementById('httpsBadge').style.display='block';}
+  if(!navigator.mediaDevices?.getUserMedia){showErr('API 不支援','NotSupportedError','此瀏覽器不支援攝影機 API。');document.getElementById('startBtn').disabled=true;}
+})();
+
+// ── Errors ──
+const ERR_MAP={
+  NotAllowedError: {t:'攝影機權限被拒絕',m:'請在網址列允許攝影機存取後重新整理。'},
+  NotFoundError:   {t:'找不到攝影機',    m:'請確認攝影機已連接並安裝驅動。'},
+  NotReadableError:{t:'攝影機被佔用',    m:'請關閉 Zoom/Teams 等程式後重試。'},
+  SecurityError:   {t:'安全性限制',      m:'請使用 https:// 或 localhost。'},
+  DEFAULT:         {t:'未知錯誤',        m:'請重新整理頁面後再試。'}
+};
+function showErr(title,code,msg){
+  document.getElementById('errCard').style.display='block';
+  document.getElementById('errTitle').textContent=title;
+  document.getElementById('errCode').textContent=code;
+  document.getElementById('errMsg').textContent=msg;
+  const b=document.getElementById('startBtn');
+  b.disabled=false; b.classList.remove('loading'); b.innerHTML='<span class="btn-sp">&#8635;</span> 重試';
+}
+function hideErr(){document.getElementById('errCard').style.display='none';}
+
+// ── Pose ──
+async function initPose(){
+  const p=new Pose({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/pose@${MP_POSE_VERSION}/${f}`});
+  p.setOptions({modelComplexity:1,smoothLandmarks:true,enableSegmentation:false,minDetectionConfidence:0.6,minTrackingConfidence:0.5});
+  p.onResults(onPoseResults);
+  await p.initialize();
+  activePose=p; poseReady=true;
+}
+function startRAF(){
+  stopRAF();
+  const vid=document.getElementById('video');
+  async function tick(){
+    if(!poseReady||!activePose||!activeStream){rafId=requestAnimationFrame(tick);return;}
+    if(isPaused||isInterrupted()){rafId=requestAnimationFrame(tick);return;}
+    if(!frameRunning&&vid.readyState>=HTMLMediaElement.HAVE_CURRENT_DATA){
+      frameRunning=true;
+      try{await activePose.send({image:vid});}catch(e){}
+      frameRunning=false;
+    }
+    rafId=requestAnimationFrame(tick);
+  }
+  rafId=requestAnimationFrame(tick);
+}
+function stopRAF(){if(rafId!==null){cancelAnimationFrame(rafId);rafId=null;}frameRunning=false;}
+
+async function hardStop(stream){
+  if(!stream)return;
+  const vid=document.getElementById('video');
+  if(vid.srcObject===stream)vid.srcObject=null;
+  await Promise.all(stream.getTracks().map(t=>new Promise(res=>{
+    if(t.readyState==='ended'){res();return;}
+    t.addEventListener('ended',res,{once:true}); t.stop(); setTimeout(res,500);
+  })));
+}
+async function acquireStream(fm){
+  const rear=fm==='environment';
+  const list=rear
+    ?[{video:{facingMode:{exact:'environment'},width:{ideal:1280},height:{ideal:720}}},{video:{facingMode:'environment'}}]
+    :[{video:{facingMode:'user',width:{ideal:1280},height:{ideal:720}}},{video:{facingMode:'user'}},{video:true}];
+  let stream=null,lastErr=null;
+  for(const c of list){try{stream=await navigator.mediaDevices.getUserMedia(c);break;}catch(e){lastErr=e;if(e.name!=='OverconstrainedError'&&e.name!=='NotFoundError')break;}}
+  if(!stream){const i=ERR_MAP[lastErr?.name]||ERR_MAP.DEFAULT;showErr(i.t,lastErr?.name||'Error',i.m);}
+  return stream;
+}
+async function attachStream(stream){
+  const vid=document.getElementById('video');
+  vid.srcObject=stream; vid.style.display='block';
+  await new Promise((res,rej)=>{
+    if(vid.readyState>=HTMLMediaElement.HAVE_METADATA){res();return;}
+    vid.onloadedmetadata=res; vid.onerror=rej; setTimeout(()=>rej(new Error('timeout')),8000);
+  });
+  await vid.play().catch(()=>{}); resizeCanvas();
+}
+function applyMirror(fm){document.getElementById('video').classList.toggle('mirror',fm==='user');}
+
+async function handleStart(){
+  hideErr();
+  resetSessionState(); resetLiveUI(); absentFrames=0; liveUiCleared=false;
+  const btn=document.getElementById('startBtn');
+  btn.disabled=true; btn.classList.add('loading'); btn.innerHTML='<span class="btn-sp">&#9711;</span> 載入中…';
+  try{if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();}catch(e){}
+  btn.innerHTML='<span class="btn-sp">&#9711;</span> 初始化 AI…';
+  try{await initPose();}catch(e){showErr('AI 模型載入失敗',e.name,'MediaPipe 初始化失敗：'+e.message);return;}
+  const stream=await acquireStream(facingMode);
+  if(!stream)return;
+  activeStream=stream; applyMirror(facingMode);
+  await attachStream(stream); startRAF();
+  const ls=document.getElementById('launchScreen');
+  ls.style.transition='opacity 0.4s'; ls.style.opacity='0';
+  setTimeout(()=>ls.style.display='none',400);
+  document.getElementById('statusBadge').textContent='ACTIVE';
+  document.getElementById('liveBadge').style.display='block';
+  document.getElementById('rulaBadge').style.display='flex';
+  document.getElementById('exportBtn').disabled=false;
+  document.getElementById('reportBtn').disabled=false;
+  document.getElementById('triggerCalBtn').disabled=false;
+  document.getElementById('flipBtn').style.display='flex';
+  document.getElementById('pauseBtn').style.display='flex';
+  if(!sessionStart)sessionStart=Date.now();
+  prevTs=Date.now(); acquireWakeLock();
+}
+async function flipCamera(){
+  if(isSwitching)return; isSwitching=true;
+  const btn=document.getElementById('flipBtn');
+  btn.disabled=true; btn.classList.add('switching');
+  if(calPhase==='open'||calPhase==='countdown')closeCalOverlay();
+  stopRAF();
+  const old=activeStream; activeStream=null;
+  await hardStop(old);
+  facingMode=facingMode==='user'?'environment':'user';
+  applyMirror(facingMode); resetEMA();
+  const s=await acquireStream(facingMode);
+  if(!s){facingMode=facingMode==='user'?'environment':'user';applyMirror(facingMode);btn.disabled=false;btn.classList.remove('switching');isSwitching=false;return;}
+  activeStream=s; await attachStream(s); startRAF();
+  btn.disabled=false; btn.classList.remove('switching'); isSwitching=false;
+}
+
+// ── Pause / Resume ──
+// 暫停時：保留攝影機畫面，但停止姿勢偵測、計時（Session/不良比例）、連續不良計時與 beep，
+// 並清除畫面上的骨架與矯正箭頭。繼續時將 sessionStart 往後平移暫停的時長，
+// 讓 Session 計時器能從暫停前的數值接續，而不會把暫停期間也算進去。
+function togglePause(){
+  if(!activeStream||!poseReady)return;
+  isPaused=!isPaused;
+  const btn=document.getElementById('pauseBtn');
+  const lbl=document.getElementById('pauseBtnLabel');
+  const icon=document.getElementById('pauseIcon');
+  const triggerBtn=document.getElementById('triggerCalBtn');
+  if(isPaused){
+    gapBegin('pause'); resetStaticState(neckStatic); resetStaticState(trunkStatic);
+    btn.classList.add('active');
+    lbl.textContent='繼續';
+    icon.innerHTML='<polygon points="6 4 20 12 6 20 6 4"/>';
+    document.getElementById('liveBadge').style.display='none';
+    document.getElementById('pausedBadge').style.display='block';
+    document.getElementById('pausedOverlay').style.display='flex';
+    document.getElementById('dangerVfx').classList.remove('on');
+    document.getElementById('noDetect').style.display='none';
+    document.getElementById('lowConfWarn').style.display='none';
+    setPills(false,false,false,false,false);
+    badStart=null;
+    const bb=document.getElementById('beepBar'); bb.style.width='0%'; bb.className='beep-f';
+    const sv=document.getElementById('streakVal'); sv.textContent='已暫停'; sv.className='streak-v';
+    document.getElementById('fpsTag').textContent='已暫停';
+    if(triggerBtn)triggerBtn.disabled=true;
+    if(calPhase==='open'||calPhase==='countdown')closeCalOverlay();
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+  } else {
+    gapEnd('pause'); // 平移 sessionStart（聯集）並重設 prevTs
+    btn.classList.remove('active');
+    lbl.textContent='暫停';
+    icon.innerHTML='<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
+    document.getElementById('liveBadge').style.display='block';
+    document.getElementById('pausedBadge').style.display='none';
+    document.getElementById('pausedOverlay').style.display='none';
+    if(triggerBtn)triggerBtn.disabled=false;
+  }
+}
+
+// ═══════════════════════════════════════════════
+//  GAP（暫停／背景中斷／相機中斷）計時、Wake Lock、visibilitychange
+// ═══════════════════════════════════════════════
+function isInterrupted(){return gapOpen.hidden!==null||gapOpen.camera!==null;}
+function gapBegin(type){
+  if(gapOpen[type]!==null)return;
+  const t=Date.now(); gapOpen[type]=t;
+  if(gapStartTs===null)gapStartTs=t;
+}
+// 所有 gap 皆結束時，才將 sessionStart 往後平移「聯集」長度（暫停與中斷重疊不會重複扣除）；並重設 prevTs，避免恢復後第一幀 dt 含整段 gap
+function gapEnd(type){
+  if(gapOpen[type]===null)return 0;
+  const t=Date.now(), dur=t-gapOpen[type];
+  gapLog.push({type,start:gapOpen[type],end:t});
+  gapOpen[type]=null;
+  if(gapOpen.pause===null&&gapOpen.hidden===null&&gapOpen.camera===null&&gapStartTs!==null){
+    if(sessionStart!==null)sessionStart+=t-gapStartTs;
+    gapStartTs=null; prevTs=t;
+  }
+  return dur;
+}
+// 有效 Session 時長（秒）：若正處於 gap 中，截至 gap 起點為止
+function activeElapsedSec(){
+  if(sessionStart===null)return 0;
+  return Math.max(0,((gapStartTs!==null?gapStartTs:Date.now())-sessionStart)/1000);
+}
+function gapSummary(){
+  const g={pause:{n:0,ms:0},hidden:{n:0,ms:0},camera:{n:0,ms:0}};
+  gapLog.forEach(x=>{g[x.type].n++;g[x.type].ms+=x.end-x.start;});
+  return g;
+}
+let bannerTimer=null;
+function showBanner(kind,title,sub,autoMs){
+  const el=document.getElementById('interruptBanner'); if(!el)return;
+  el.className='interrupt-banner show '+kind;
+  el.querySelector('.ib-t').textContent=title; el.querySelector('.ib-s').textContent=sub||'';
+  clearTimeout(bannerTimer);
+  if(autoMs)bannerTimer=setTimeout(hideBanner,autoMs);
+}
+function hideBanner(){const el=document.getElementById('interruptBanner'); if(el)el.classList.remove('show');}
+function monitoringActive(){return !!(activeStream&&sessionStart!==null);}
+
+function setWakeBadge(state){
+  const b=document.getElementById('wakeBadge'); if(!b)return;
+  const m={on:['AWAKE','ok'],unsupported:['NO-WAKELOCK','warn'],lost:['WAKE-OFF','warn'],failed:['WAKE-FAIL','warn'],off:['','']};
+  const [t,c]=m[state]||m.off;
+  b.textContent=t; b.className='chip chip-wake '+c; b.style.display=t?'inline-block':'none';
+}
+async function acquireWakeLock(){
+  if(!('wakeLock' in navigator)){setWakeBadge('unsupported');return;}
+  if(wakeLock)return;
+  try{
+    const wl=await navigator.wakeLock.request('screen'); wakeLock=wl;
+    wl.addEventListener('release',()=>{ if(wakeLock===wl){wakeLock=null; if(monitoringActive())setWakeBadge('lost');} });
+    setWakeBadge('on');
+  }catch(e){wakeLock=null;setWakeBadge('failed');}
+}
+async function releaseWakeLock(){
+  const wl=wakeLock; wakeLock=null;
+  try{if(wl)await wl.release();}catch(e){}
+  setWakeBadge('off');
+}
+// 分頁回到前景後：相機軌道若已被系統結束（行動裝置常見）則重新取得；仍存活則僅恢復播放
+async function recoverStream(){
+  const tr=activeStream&&activeStream.getVideoTracks&&activeStream.getVideoTracks()[0];
+  if(tr&&tr.readyState==='live'){try{await video.play();}catch(e){} return;}
+  stopRAF(); const old=activeStream; activeStream=null; await hardStop(old);
+  const s=await acquireStream(facingMode);
+  if(!s){
+    gapBegin('camera'); // 無法恢復：持續標記為中斷（不計入監測時間），使用者可按「結束並產生報告」
+    showBanner('bad','攝影機無法恢復','監測已中斷；請結束並重新啟動監測');
+    return;
+  }
+  activeStream=s; await attachStream(s); startRAF();
+}
+async function onVisibilityChange(){
+  if(document.hidden){
+    if(!monitoringActive()||gapOpen.hidden!==null)return;
+    gapBegin('hidden');
+    resetStaticState(neckStatic); resetStaticState(trunkStatic); badStart=null;
+    // 背景中之頁面無法顯示 UI，故同步以分頁標題標示；回到前景時立即顯示中斷橫幅與時長
+    document.title='⚠ 監測已中斷｜'+BASE_TITLE;
+    showBanner('bad','監測已中斷','分頁在背景，偵測與計時已停止');
+    const sv=document.getElementById('streakVal'); if(sv){sv.textContent='已中斷';sv.className='streak-v';}
+  } else {
+    document.title=BASE_TITLE;
+    if(gapOpen.hidden!==null){
+      const dur=gapEnd('hidden');
+      showBanner('ok','監測已恢復','中斷 '+fmt(dur/1000)+'，此段不計入監測時間',6000);
+    }
+    if(monitoringActive()){await acquireWakeLock(); await recoverStream();}
+  }
+}
+document.addEventListener('visibilitychange',()=>{onVisibilityChange();});
+
+// ═══════════════════════════════════════════════
+//  逐幀紀錄：降採樣（項目 5）與 CSV 註解列
+// ═══════════════════════════════════════════════
+// 達上限時保留偶數索引列並將取樣間隔加倍；統計（detStats／badTotal／rulaAgg）皆逐幀累計，不受降採樣影響
+function pushLog(entry){
+  const take=(logSeq%logStride===0); logSeq++;
+  if(!take){updateLogUI();return;}
+  dataLog.push(entry);
+  if(dataLog.length>=LOG_MAX){
+    dataLog=dataLog.filter((_,i)=>i%2===0); logStride*=2;
+    logEvents.push({elapsed:entry.el,stride:logStride,frameIdx:entry.frameIdx});
+  }
+  updateLogUI();
+}
+function updateLogUI(){
+  const rc=document.getElementById('recordCount'); if(rc)rc.textContent=dataLog.length+' 幀'+(logStride>1?'（1/'+logStride+'）':'');
+  const n=document.getElementById('logNote');
+  if(n){n.style.display=logStride>1?'block':'none';
+        n.textContent='⚠ 已達 '+LOG_MAX+' 幀上限，逐幀資料降採樣為 1/'+logStride+'（統計與 RULA 平均不受影響；CSV 開頭有註記）';}
+}
+function buildCsvComments(){
+  const g=gapSummary(), L=[];
+  const sec=ms=>(ms/1000).toFixed(1)+'s';
+  L.push('# Chris_Posture_CSV | 匯出時間(本地 '+tzLabel()+')='+localDateTime(Date.now()));
+  L.push('# TotalFrames='+totalFrames+' | DetectedFrames='+detectedFrames+'（偵測到人體且至少一側肩可見）| ValidFrames='+validFramesN+' | LowConfFrames='+lowConfFrames+' | NoPersonFrames='+noPersonFrames);
+  L.push('# ValidSec='+validSec.toFixed(1)+' | LowConfSec='+lowConfSec.toFixed(1)+' | NoPersonSec='+noPersonSec.toFixed(1)+'（逐幀 dt 累加）| SessionSec='+activeElapsedSec().toFixed(1));
+  L.push('# StoredRows='+dataLog.length+' | LogStride='+logStride+' | DecimationEvents='+logEvents.length+(logEvents.length?' ['+logEvents.map(e=>'elapsed '+e.elapsed.toFixed(1)+'s→1/'+e.stride).join('; ')+']':''));
+  if(logStride>1)L.push('# ⚠ 逐幀資料已降採樣（每 '+logStride+' 幀取 1 列，較早期資料之間隔可能更小，請以 FrameIndex 欄位還原）；RULA 平均／統計表係由全部幀累計，不受影響');
+  L.push('# Pauses='+g.pause.n+' ('+sec(g.pause.ms)+') | BackgroundInterrupts='+g.hidden.n+' ('+sec(g.hidden.ms)+') | CameraLost='+g.camera.n+' ('+sec(g.camera.ms)+')');
+  gapLog.forEach(x=>L.push('# Gap '+x.type+' '+localClock(x.start)+'~'+localClock(x.end)+' ('+sec(x.end-x.start)+')'));
+  L.push('# Calibrated='+(isCalibrated?1:0)+(isCalibrated?' | NeckBase='+calNeckBase.toFixed(2)+' | TrunkBase='+calTrunkBase.toFixed(2):''));
+  calLog.forEach(c=>L.push('# CalAttempt '+localClock(c.ts)+' '+(c.ok?'accepted':'REJECTED')+' neck='+c.neck.toFixed(1)+' trunk='+c.trunk.toFixed(1)));
+  L.push('# Elapsed_s 已排除暫停／中斷時間；Timestamp_ms 為 epoch 毫秒；讀取時請用 pandas.read_csv(path, comment="#")');
+  return L;
+}
+
+// ── EMA ──
+function resetEMA(){
+  emaNeck=null;emaTrunk=null;emaUAL=null;emaUAR=null;emaLAL=null;emaLAR=null;emaWRL=null;emaWRR=null;emaSh=null;emaTu=null;emaTi=null;emaCva=null;emaLean=null;
+  neckStatic={ref:null,start:null,isStatic:false};
+  trunkStatic={ref:null,start:null,isStatic:false};
+}
+
+// ── 靜態姿勢判定（RULA 肌肉使用加分）──
+// 頸/軀幹角度若連續 ≥60 秒（STATIC_WINDOW_MS）都沒有超過 5°（STATIC_DELTA）的變化，
+// 視為靜態姿勢，依 RULA 規則對該群組（Group B）加 1 分肌肉使用分數。
+function resetStaticState(state){state.ref=null;state.start=null;state.isStatic=false;}
+// 項目 2：value 為「濾波前之校準角度」（neckCal／trunkCal）。value 無效（null／NaN，例如髖部缺失）＝ 連續性中斷 → 重置計時。
+// 暫停、無人偵測、低信心、背景中斷時，由呼叫端呼叫 resetStaticState()；不重置會把中斷期間誤算為「持續靜態」。
+function updateStaticState(state,value){
+  if(value===null||value===undefined||!isFinite(value)){resetStaticState(state);return;}
+  if(state.ref===null||Math.abs(value-state.ref)>=STATIC_DELTA){
+    state.ref=value; state.start=Date.now(); state.isStatic=false;
+  } else if(Date.now()-state.start>=STATIC_WINDOW_MS){
+    state.isStatic=true;
+  }
+}
+
+// ── 偵測類型觸發次數／累積時長統計（供結束報告使用）──
+// 兩套演算法（legacy／new）每幀都追蹤，報告可並列比較；detMode 僅決定畫面顯示
+function makeDetStats(){
+  const mk=()=>({shoulder:{active:false,count:0,time:0},turtle:{active:false,count:0,time:0},tilt:{active:false,count:0,time:0}});
+  const cm=()=>({neck:{active:false,count:0,time:0},trunk:{active:false,count:0,time:0}});
+  return {legacy:mk(), new:mk(), common:cm(), validTime:{cva:0,lean:0,tilt:0,neck:0,trunk:0}};
+}
+function trackDet(mode,key,isActive,dtSec){
+  const s=detStats[mode][key];
+  if(isActive){ if(!s.active){s.active=true; s.count++;} s.time+=dtSec; }
+  else s.active=false;
+}
+function applyModeLabels(){
+  const nw=(detMode==='new');
+  const set=(id,t)=>{const e=document.getElementById(id); if(e)e.textContent=t;};
+  set('dShName',nw?'軀幹前傾（輔助）':'圓肩');
+  set('dShUnit',nw?'肩→髖連線前傾角 °':'肩髖水平距（px）');
+  set('dTuName',nw?'顱脊角 CVA':'烏龜頸');
+  set('dTuUnit',nw?'耳—肩(≈C7) 對水平線 °':'頭部前伸量（px）');
+  set('pillShoulderTxt',nw?'軀幹前傾(輔)':'圓肩');
+  set('pillTurtleTxt',nw?'前頭姿勢 CVA<50°':'烏龜頸');
+  set('featSh',nw?'軀幹前傾（輔助）':'圓肩偵測');
+  set('featTu',nw?'前頭姿勢 CVA':'烏龜頸偵測');
+  set('logoSub','RULA（簡化實作）· Group A+B · MediaPipe · '+(nw?'CVA · 軀幹前傾(輔)':'圓肩 · 烏龜頸')+' · 側傾 · 矯正箭頭');
+  const b=document.getElementById('modeToggle');
+  if(b){b.textContent=nw?'新版 CVA':'舊版 肩寬正規化'; b.className='ema-tog'+(nw?' on':'');}
+}
+function toggleDetMode(){ detMode=(detMode==='new')?'legacy':'new'; emaConf=null; applyModeLabels(); } // 信心度基準隨模式不同（近側三點／六點），切換時重設其 EMA
+function updateViewNote(v,side){
+  const el=document.getElementById('viewNote'); if(!el)return;
+  const cls={side:'側面',oblique:'斜側面',front:'正面'}[v.viewClass]||'—';
+  const phi=(v.phi===null)?'單肩可見→視為側面':('φ='+v.phi.toFixed(0)+'°');
+  const fc=v.facing===1?'→':v.facing===-1?'←':'?';
+  let t='視角：'+cls+'（'+phi+'）· 近側：'+(side==='L'?'左':'右')+' · 朝向：'+fc;
+  const bad=(v.viewClass==='front');
+  if(bad)t+='\n正面：CVA／軀幹前傾不評，請轉為側面或斜側面';
+  el.textContent=t; el.style.whiteSpace='pre-line'; el.className='view-note'+(bad?' bad':'');
+}
+
+// ── 重置 Session 狀態（供重新開始監測使用）──
+function resetSessionState(){
+  sessionStart=null; badStart=null; badTotal=0; lastBeep=0;
+  isPaused=false;
+  gapStartTs=null; gapLog=[]; gapOpen={pause:null,hidden:null,camera:null};
+  emaConf=null; confLow=false;
+  totalFrames=0; detectedFrames=0; validFramesN=0; lowConfFrames=0; noPersonFrames=0;
+  validSec=0; lowConfSec=0; noPersonSec=0; rulaAgg={w:0,sum:0,max:0,n:0};
+  logStride=1; logSeq=0; logEvents=[]; calLog=[];
+  hideBanner(); document.title=BASE_TITLE;
+  neckHist=[]; trunkHist=[]; uaHist=[]; shoulderHist=[];
+  dataLog=[];
+  detStats=makeDetStats(); lastFacing=null;
+  neckStatic={ref:null,start:null,isStatic:false};
+  trunkStatic={ref:null,start:null,isStatic:false};
+  updateLogUI();
+  const po=document.getElementById('pausedOverlay'); if(po)po.style.display='none';
+  const pbd=document.getElementById('pausedBadge'); if(pbd)pbd.style.display='none';
+  const pb=document.getElementById('pauseBtn');
+  if(pb){
+    pb.classList.remove('active');
+    const pbl=document.getElementById('pauseBtnLabel'); if(pbl)pbl.textContent='暫停';
+    const pIcon=document.getElementById('pauseIcon'); if(pIcon)pIcon.innerHTML='<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
+  }
+}
+
+function toggleEMA(){
+  emaOn=!emaOn;
+  const b=document.getElementById('emaToggle');
+  b.textContent=emaOn?'ON':'OFF'; b.className='ema-tog'+(emaOn?' on':'');
+  document.getElementById('emaBadge').style.opacity=emaOn?'1':'0.35';
+  resetEMA();
+}
+function ema(prev,cur,a){if(cur===null||!isFinite(cur))return prev;return prev===null?cur:a*cur+(1-a)*prev;}
+
+// ── Calibration ──
+function openCalOverlay(){
+  calPhase='open'; calBuf=[];
+  if(calTimer){clearInterval(calTimer);calTimer=null;}
+  document.getElementById('calCountdown').style.display='none';
+  document.getElementById('calDoneMsg').style.display='none';
+  document.getElementById('calStartBtn').style.display='block';
+  document.getElementById('calStartBtn').disabled=true;
+  document.getElementById('calCancelBtn').textContent='取消';
+  document.getElementById('calStatus').textContent='— 偵測入鏡中 —';
+  ['chkEar','chkSh','chkElb','chkWr','chkHip'].forEach(id=>document.getElementById(id).className='ck-dot');
+  document.getElementById('calOverlay').style.display='flex';
+}
+function closeCalOverlay(){
+  if(calTimer){clearInterval(calTimer);calTimer=null;}
+  calPhase=isCalibrated?'done':'idle'; // 以獨立旗標判斷：基準恰為 0° 時 (calNeckBase||calTrunkBase) 為 falsy 會被誤判為未校準
+  document.getElementById('calOverlay').style.display='none'; calBuf=[];
+}
+function startCalibration(){
+  if(calPhase!=='open')return;
+  calPhase='countdown'; calCount=3; calBuf=[];
+  document.getElementById('calStartBtn').style.display='none';
+  const cd=document.getElementById('calCountdown');
+  cd.textContent='3'; cd.style.display='block';
+  document.getElementById('calStatus').textContent='保持標準坐姿不動…';
+  calTimer=setInterval(()=>{
+    calCount--;
+    if(calCount>0){cd.textContent=calCount;}
+    else{clearInterval(calTimer);calTimer=null;applyCalibration();}
+  },1000);
+}
+function applyCalibration(){
+  if(!calBuf.length){document.getElementById('calStatus').textContent='無法捕捉，請重試';document.getElementById('calStartBtn').style.display='block';calPhase='open';return;}
+  const nB=calBuf.reduce((s,f)=>s+f.neck,0)/calBuf.length;
+  const tB=calBuf.reduce((s,f)=>s+f.trunk,0)/calBuf.length;
+  // 表 3-15 項目五：校準前以「絕對角度」門檻檢核，避免不良姿勢被登錄為 0° 基準
+  const why=[];
+  if(nB>=CAL_NECK_MAX_DEG) why.push('頸部 '+nB.toFixed(1)+'° ≥ '+CAL_NECK_MAX_DEG+'°');
+  if(tB>=CAL_TRUNK_MAX_DEG)why.push('軀幹 '+tB.toFixed(1)+'° ≥ '+CAL_TRUNK_MAX_DEG+'°');
+  calLog.push({ts:Date.now(),ok:!why.length,neck:nB,trunk:tB});
+  if(why.length){
+    calRejectMsg='校準被拒絕：'+why.join('、')+'。請坐正（耳—肩—髖接近鉛直）後重試';
+    calRejectUntil=Date.now()+5000;
+    calPhase='open'; calBuf=[];
+    document.getElementById('calCountdown').style.display='none';
+    document.getElementById('calStartBtn').style.display='block';
+    document.getElementById('calStatus').textContent=calRejectMsg;
+    return; // 不更動既有基準與 isCalibrated
+  }
+  calNeckBase=nB; calTrunkBase=tB; isCalibrated=true;
+  calPhase='done'; resetEMA();
+  document.getElementById('calCountdown').style.display='none';
+  document.getElementById('calDoneMsg').style.display='block';
+  document.getElementById('calStatus').textContent='基準角度已鎖定';
+  document.getElementById('calCancelBtn').textContent='關閉';
+  const card=document.getElementById('calStateCard');
+  card.textContent='已校準 — 以初始坐姿為 0° 基準';
+  card.className='cal-state calibrated';
+  document.getElementById('calOffsetRow').style.display='flex';
+  document.getElementById('calNeckOff').textContent=calNeckBase.toFixed(1)+'°';
+  document.getElementById('calTrunkOff').textContent=calTrunkBase.toFixed(1)+'°';
+  document.getElementById('calBadge').style.display='block';
+  setTimeout(closeCalOverlay,1500);
+}
+function tickCal(hasEar,hasSh,hasElb,hasWr,hasHip,neckRaw,trunkRaw){
+  if(calPhase!=='open'&&calPhase!=='countdown')return;
+  const dot=(id,ok)=>document.getElementById(id).className='ck-dot'+(ok?' ok':' bad');
+  dot('chkEar',hasEar);dot('chkSh',hasSh);dot('chkElb',hasElb);dot('chkWr',hasWr);dot('chkHip',hasHip);
+  const ok=hasEar&&hasSh&&hasHip;
+  const withinLimit=ok&&neckRaw<CAL_NECK_MAX_DEG&&trunkRaw!==null&&trunkRaw<CAL_TRUNK_MAX_DEG;
+  if(calPhase==='open'){
+    document.getElementById('calStartBtn').disabled=!withinLimit;
+    let msg;
+    if(Date.now()<calRejectUntil)msg=calRejectMsg;
+    else if(!ok)msg='請調整使耳、肩、髖皆入鏡';
+    else if(!withinLimit)msg='目前頸 '+neckRaw.toFixed(0)+'°／軀幹 '+(trunkRaw===null?'--':trunkRaw.toFixed(0))+'° 超過校準上限（頸<'+CAL_NECK_MAX_DEG+'°、軀幹<'+CAL_TRUNK_MAX_DEG+'°），請坐正';
+    else msg='入鏡足夠，可開始校準';
+    document.getElementById('calStatus').textContent=msg;
+  }
+  if(calPhase==='countdown'&&ok){calBuf.push({neck:neckRaw,trunk:trunkRaw});if(calBuf.length>15)calBuf.shift();}
+}
+
+// ── Math ──
+Math.deg=r=>r*180/Math.PI;
+function vertAngle(ax,ay,bx,by){const dx=bx-ax,dy=by-ay,m=Math.sqrt(dx*dx+dy*dy);if(m<1e-6)return 0;return Math.deg(Math.acos(Math.max(-1,Math.min(1,dy/m))));}
+function jointAngle(ax,ay,bx,by,cx,cy){const v1x=ax-bx,v1y=ay-by,v2x=cx-bx,v2y=cy-by,d=v1x*v2x+v1y*v2y,m1=Math.sqrt(v1x*v1x+v1y*v1y),m2=Math.sqrt(v2x*v2x+v2y*v2y);if(m1<1e-6||m2<1e-6)return 0;return Math.deg(Math.acos(Math.max(-1,Math.min(1,d/(m1*m2)))));}
+function midPt(a,b){return{x:(a.x+b.x)/2,y:(a.y+b.y)/2};}
+
+// ── 座標換算：計算座標與繪製座標分離（報告 3.3.2(一)、4.2 第七部分之已知限制之修正）──
+// 顯示區 dw×dh（CSS px）以 object-fit:cover 顯示影像 vw×vh（px）。
+// 計算座標：等向縮放 s＝max(dw/vw, dh/vh)；內容尺寸 cw×ch＝(vw·s)×(vh·s)；x＝xNorm·cw、y＝yNorm·ch（鏡像時 x 以 1−xNorm）。
+//   角度、距離與 px 門檻（FACING_MIN_DX_PX、MIN_SCALE_PX 等）一律在此空間計算；此空間與舊版同為「顯示尺度之 px」，故各 px 門檻之量級不變。
+//   顯示區與影像長寬比相同（k＝1）時，cw＝dw、ch＝dh，換算式與舊版「xNorm×顯示寬、yNorm×顯示高」逐位相同。
+//   （主導維度直接取 cw＝dw 或 ch＝dh，而非 vw·s，以避免浮點誤差；數學上兩者相等。）
+// 繪製座標：計算座標加上 cover 置中裁切之位移 (ox,oy)＝((dw−cw)/2, (dh−ch)/2)；於繪製時以 ctx.translate 套用，不進入任何計算。
+// 影像尺寸未知（vw／vh 為 0）：沿用舊版（以顯示區尺寸換算），comp＝'size-unknown'。
+function computeViewGeom(dw,dh,vw,vh){
+  const g={dw:dw,dh:dh,vw:vw,vh:vh,s:1,cw:dw,ch:dh,ox:0,oy:0,k:null,comp:'none'};
+  if(!(dw>0&&dh>0))return g;
+  if(!(vw>0&&vh>0)){g.comp='size-unknown';return g;}
+  const sx=dw/vw, sy=dh/vh;
+  g.k=(dw/dh)/(vw/vh);
+  if(Math.abs(sx-sy)<=1e-9*Math.max(sx,sy)){g.s=sx;g.comp='aspect-equal';return g;}
+  if(sx>sy){g.s=sx;g.cw=dw;g.ch=vh*sx;} else {g.s=sy;g.ch=dh;g.cw=vw*sy;}
+  g.ox=(dw-g.cw)/2; g.oy=(dh-g.ch)/2; g.comp='cover-compensated';
+  return g;
+}
+// 正規化座標 → 計算座標（z 不參與；z 只用於視角 φ，見 estimateViewPhi）
+function mapLandmark(lm,g,mirror){
+  return {x:(mirror?(1-lm.x):lm.x)*g.cw, y:lm.y*g.ch};
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  V2 幾何（側面視角友善）：近側特徵點、視角 φ、CVA、軀幹前傾輔助、多種正規化基準（記錄用）
+// ═══════════════════════════════════════════════════════════════
+// 視角 φ：雙肩連線相對影像平面之旋轉角。0°＝正面、90°＝純側面。
+// 以 MediaPipe 正規化座標 x 與 z（z 與 x 同尺度，為模型推估非實測）估計；任一肩不可見→回傳 null（視為側面）
+function estimateViewPhi(lm){
+  const a=lm[11],b=lm[12];
+  if(!a||!b||!(a.visibility>VIS_MIN)||!(b.visibility>VIS_MIN)||typeof a.z!=='number'||typeof b.z!=='number')return null;
+  return Math.deg(Math.atan2(Math.abs(a.z-b.z),Math.abs(a.x-b.x)));
+}
+// 近側：耳／肩／髖平均 visibility 較高之一側
+function pickNearSide(lm){
+  const v=i=>(lm[i]&&lm[i].visibility!=null)?lm[i].visibility:0;
+  return ((v(7)+v(11)+v(23))/3>=(v(8)+v(12)+v(24))/3)?'L':'R';
+}
+// p:{E:耳,S:肩(≈C7),H:髖,Eye:眼,nose:鼻,phiDeg,facingPrev}（皆為顯示座標 px，y 向下）
+// 回傳 CVA（顱脊角）、軀幹前傾角（有號，前傾為正）、各正規化基準與有效性旗標
+function computeV2(p){
+  const o={phi:null,viewClass:'unknown',facing:null,tiltOk:true,TL:null,ESV:null,HS:null,headPitch:null,
+           cva:null,cvaValid:false,lean:null,leanValid:false};
+  const phiEff=(p.phiDeg===null||p.phiDeg===undefined)?90:p.phiDeg;
+  o.phi=(p.phiDeg===undefined)?null:p.phiDeg;
+  o.viewClass=phiEff>=VIEW_SIDE_PHI_DEG?'side':(phiEff>=VIEW_MIN_PHI_DEG?'oblique':'front');
+  o.tiltOk=phiEff<TILT_MAX_PHI_DEG;
+  // 臉朝向（顯示座標下 +1＝朝影像右側）：鼻相對耳；不明時沿用上一幀
+  let f=null;
+  if(p.nose&&p.E){const d=p.nose.x-p.E.x; if(Math.abs(d)>=FACING_MIN_DX_PX)f=d>0?1:-1;}
+  if(f===null&&p.facingPrev!==null&&p.facingPrev!==undefined)f=p.facingPrev;
+  o.facing=f;
+  // 正規化基準候選（僅記錄供比較；CVA 為角度量，本身不需正規化）
+  if(p.S&&p.H){const t=Math.hypot(p.S.x-p.H.x,p.S.y-p.H.y); if(t>=MIN_SCALE_PX)o.TL=t;}   // 軀幹長
+  if(p.E&&p.S)o.ESV=Math.abs(p.S.y-p.E.y);                                                 // 耳—肩垂直距
+  if(p.E&&p.Eye)o.HS=Math.hypot(p.E.x-p.Eye.x,p.E.y-p.Eye.y);                              // 頭部尺寸（耳—眼）
+  // 頭部俯仰（耳→眼連線對水平線；朝前為正；僅記錄，用於檢視與 CVA 是否獨立）
+  if(p.E&&p.Eye&&f!==null)o.headPitch=Math.deg(Math.atan2(p.E.y-p.Eye.y,(p.Eye.x-p.E.x)*f));
+  const sinPhi=Math.sin(phiEff*Math.PI/180);
+  const viewOk=(phiEff>=VIEW_MIN_PHI_DEG)&&(f!==null);
+  // CVA：以肩點（可加偏移）近似 C7；水平位移依 sinφ 還原（斜側面）
+  if(viewOk&&p.E&&p.S){
+    let cx=p.S.x, cy=p.S.y;
+    if(o.TL!==null){cx-=f*CVA_C7_OFFSET_FWD_TL*o.TL; cy-=CVA_C7_OFFSET_UP_TL*o.TL;}
+    const dxFwd=((p.E.x-cx)*f)/sinPhi, dyUp=cy-p.E.y;
+    if(dyUp>0){o.cva=Math.deg(Math.atan2(dyUp,dxFwd)); o.cvaValid=true;}
+  }
+  // 軀幹前傾輔助：肩相對髖之前傾角（有號）；等同軀幹角度之有號版本
+  if(viewOk&&p.S&&p.H&&o.TL!==null){
+    const dxFwd=((p.S.x-p.H.x)*f)/sinPhi, dyUp=p.H.y-p.S.y;
+    if(dyUp>0){o.lean=Math.deg(Math.atan2(dxFwd,dyUp)); o.leanValid=true;}
+  }
+  return o;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  RULA Scoring
+//  【本區塊為 RULA 查表修正版】依據 McAtamney & Corlett (1993) Table A / B / C
+//  neckScore / trunkScore / legScore / uaScore / laScore / wrScore / TC / interp 皆未更動。
+//  修改項目：R1–R6（見各處註解）
+// ═══════════════════════════════════════════════════════════════
+
+// [修改 R1] 輔助函式：分數 → 0 起算索引。
+// 原因：原碼對 <1 或非整數輸入會產生負／小數索引，導致 TypeError 或被 `||` 靜默改寫成其他值。
+//       現改為：非數字／非整數／<1 → null（未評分）；> max → 夾在 max（與原碼「上限夾住」語意一致）。
+function _rulaIdx(v,max){
+  if(typeof v!=='number'||!Number.isInteger(v)||v<1)return null;
+  return Math.min(v,max)-1;
+}
+
+function neckScore(a)  {return a<=10?1:a<=20?2:a<=35?3:4;}
+// 輸入為 null（軀幹角度無法量測，例如髖部缺失）時，明確回傳 null（未評分），不得以 0 代入判斷區間
+function trunkScore(a) {if(a===null||!isFinite(a))return null;return a<=10?1:a<=20?2:a<=60?3:4;}
+function legScore()    {return 1;}
+
+// ── Table B ── 索引順序 TB[腿部-1][軀幹-1][頸部-1]（與原碼相同）
+// [修改 R2] 數值依原始 Table B 逐格重建，並擴充為 頸 1–6、軀幹 1–6（原碼僅 1–4，且 32 格中有 15 格數值錯誤）。
+const TB=[
+  [[1,2,3,5,7,8],[2,2,3,5,7,8],[3,4,4,6,7,8],[5,5,5,7,8,8],[6,6,6,7,8,9],[7,7,7,8,8,9]], // 腿部 = 1
+  [[3,3,3,5,7,8],[3,3,4,6,7,8],[4,5,5,7,8,8],[5,5,6,7,8,9],[6,7,7,7,8,9],[7,7,7,8,8,9]]  // 腿部 = 2
+];
+// ts（軀幹分數）或 ns（頸部分數）為 null 時，Group B 無法計算，回傳 null（未評分），避免對表格做無效索引
+// [修改 R3] 移除 `||ts` 靜默備援（原碼查表失敗會回傳軀幹分數，掩蓋錯誤）；表已完整覆蓋，不需備援。
+function groupB(ns,ts,ls){
+  const l=_rulaIdx(ls,2),t=_rulaIdx(ts,6),n=_rulaIdx(ns,6);
+  if(l===null||t===null||n===null)return null;
+  return TB[l][t][n];
+}
+
+function uaScore(a){return a<20?1:a<=45?2:a<=90?3:4;}
+function laScore(a){return(a>=60&&a<=100)?1:2;}
+function wrScore(a){return a<15?1:a<=30?2:3;}
+
+// ── Table A ── 索引順序 TA[扭轉-1][上臂-1][手腕-1][下臂-1]
+// [修改 R4] 原碼為 TA[上臂][下臂][手腕]，但資料實為 [上臂][手腕列][下臂欄]，索引順序寫反 → 改為 [上臂][手腕][下臂]。
+// [修改 R5] 原碼數值有多格與原表不符（如 上臂1/手腕4/下臂3 應為 4 而非 3），依原表重建；
+//           擴充上臂 1–6、手腕 1–4、下臂 1–3、扭轉 1–2（原碼僅 1–4／1–3／1–3／扭轉固定=1）。
+const TA_T1=[ // 手腕扭轉 = 1
+  [[1,2,2],[2,2,3],[2,3,3],[3,3,4]],
+  [[2,3,3],[3,3,4],[3,3,4],[4,4,5]],
+  [[3,3,4],[4,4,4],[4,4,4],[5,5,5]],
+  [[4,4,4],[4,4,4],[4,4,5],[5,5,6]],
+  [[5,5,6],[5,6,6],[5,6,7],[6,7,7]],
+  [[7,8,9],[7,8,9],[7,8,9],[8,9,9]]
+];
+const TA_T2=[ // 手腕扭轉 = 2（目前主程式未使用，保留完整表供日後擴充；
+              // 上臂5/下臂2/手腕3 一格：NCSU=7、Lueder 1996 修改版=6，待人工核對原論文）
+  [[2,2,3],[2,2,3],[3,3,3],[3,3,4]],
+  [[3,3,4],[3,3,4],[4,4,4],[4,4,5]],
+  [[3,4,4],[4,4,4],[4,4,5],[5,5,5]],
+  [[4,4,4],[4,4,5],[5,5,5],[5,5,6]],
+  [[5,6,6],[5,6,7],[6,7,7],[7,7,8]],
+  [[7,8,9],[7,8,9],[8,9,9],[9,9,9]]
+];
+const TA=[TA_T1,TA_T2];
+// tw 預設 1，與原碼行為一致（主程式呼叫 groupA(sUA,sLA,sWR) 不需更動）
+function groupA(us,ls,ws,tw=1){
+  const w2=_rulaIdx(tw,2),u=_rulaIdx(us,6),w=_rulaIdx(ws,4),l=_rulaIdx(ls,3);
+  if(w2===null||u===null||w===null||l===null)return null;
+  return TA[w2][u][w][l];
+}
+
+// ── Table C ── TC 與原碼完全相同，逐格核對無誤（未更動）
+const TC=[ [1,2,3,3,4,5,5],[2,2,3,4,4,5,5],[3,3,3,4,4,5,6],[3,3,3,4,5,6,6],[4,4,4,5,6,7,7],[4,4,5,6,6,7,7],[5,5,6,6,7,7,7],[5,5,6,7,7,7,7] ];
+// gA 或 gB 為 null 時（例如軀幹未評分導致 Group B 未知），Grand Score 無法計算，回傳 null（未評分）
+// [修改 R6] 僅補上下界／非整數防護（原碼 gA<1 時 TC[-1] 會 TypeError）；上限夾住（8+／7+）維持不變。
+function grandScore(gA,gB){
+  const a=_rulaIdx(gA,8),b=_rulaIdx(gB,7);
+  if(a===null||b===null)return null;
+  return TC[a][b];
+}
+
+function interp(s){
+  if(s<=2)return{lv:'姿勢良好',act:'繼續保持良好坐姿',cls:'good'};
+  if(s<=4)return{lv:'建議調整',act:'考慮調整座位或坐姿',cls:'warn'};
+  if(s<=6)return{lv:'需要改善',act:'應盡快進行人因調查',cls:'danger'};
+  return{lv:'立即調整',act:'坐姿危險，立即採取矯正措施',cls:'danger'};
+}
+
+// ── Beep ──
+function beep(){
+  if(!audioCtx)return;
+  try{
+    if(audioCtx.state==='suspended')audioCtx.resume();
+    const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+    o.connect(g);g.connect(audioCtx.destination);
+    o.type='sine';o.frequency.value=880;
+    g.gain.setValueAtTime(0.4,audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.5);
+    o.start();o.stop(audioCtx.currentTime+0.5);
+  }catch(e){}
+}
+
+// ── Canvas ──
+const video=document.getElementById('video');
+const canvas=document.getElementById('canvas');
+const ctx=canvas.getContext('2d');
+// 項目 8：僅在尺寸實際改變時才寫入 canvas.width／height（寫入會重配緩衝並清空畫布與狀態，原本每幀都執行）
+function resizeCanvas(){
+  const r=video.getBoundingClientRect();
+  const w=Math.round(r.width ||video.videoWidth ||640);
+  const h=Math.round(r.height||video.videoHeight||480);
+  if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}
+}
+window.addEventListener('resize',resizeCanvas);
+if(HAS_RO)new ResizeObserver(()=>resizeCanvas()).observe(video); // 版面變動（含 video 顯示／隱藏）時觸發；無 ResizeObserver 之環境於每幀呼叫（內含尺寸比對，成本低）
+
+// 項目 8：任意 CSS 色（#rgb／#rrggbb／rgb()／rgba()）→ 指定透明度之 rgba()；原本以字串 replace 轉換，對十六進位色碼無效
+function withAlpha(col,a){
+  if(typeof col!=='string')return col;
+  if(col[0]==='#'){
+    let h=col.slice(1); if(h.length===3)h=h.split('').map(c=>c+c).join('');
+    const n=parseInt(h.slice(0,6),16);
+    return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+a+')';
+  }
+  const m=col.match(/rgba?\(([^)]+)\)/);
+  if(m){const p=m[1].split(',').map(x=>x.trim()); return 'rgba('+p[0]+','+p[1]+','+p[2]+','+a+')';}
+  return col;
+}
+
+// ── Drawing helpers ──
+function drawNode(x,y,col,r=6){
+  ctx.beginPath();ctx.arc(x,y,r+4,0,Math.PI*2);
+  ctx.fillStyle=withAlpha(col,0.14);ctx.fill();
+  ctx.beginPath();ctx.arc(x,y,r+1.5,0,Math.PI*2);
+  ctx.fillStyle='rgba(0,0,0,0.55)';ctx.fill();
+  ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);
+  ctx.fillStyle=col;ctx.shadowColor=col;ctx.shadowBlur=13;ctx.fill();ctx.shadowBlur=0;
+  ctx.beginPath();ctx.arc(x-r*.25,y-r*.25,r*.35,0,Math.PI*2);
+  ctx.fillStyle='rgba(255,255,255,0.36)';ctx.fill();
+}
+function drawLine(ax,ay,bx,by,col,w=3){
+  ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(bx,by);
+  ctx.strokeStyle=col;ctx.lineWidth=w+4;ctx.lineCap='round';ctx.globalAlpha=0.11;ctx.stroke();ctx.globalAlpha=1;
+  ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(bx,by);
+  ctx.strokeStyle=col;ctx.lineWidth=w;ctx.lineCap='round';
+  ctx.shadowColor=col;ctx.shadowBlur=8;ctx.stroke();ctx.shadowBlur=0;
+}
+function drawArc(cx,cy,deg,col,r=42){
+  if(!isFinite(deg)||deg<=0)return;
+  ctx.beginPath();ctx.moveTo(cx,cy);
+  ctx.arc(cx,cy,r,-Math.PI/2,-Math.PI/2+Math.min(deg,180)*Math.PI/180);
+  ctx.closePath();ctx.fillStyle=withAlpha(col,0.094);ctx.fill();
+  ctx.beginPath();ctx.arc(cx,cy,r,-Math.PI/2,-Math.PI/2+Math.min(deg,180)*Math.PI/180);
+  ctx.strokeStyle=col;ctx.lineWidth=1.5;ctx.shadowColor=col;ctx.shadowBlur=5;ctx.stroke();ctx.shadowBlur=0;
+}
+function drawLabel(x,y,text,col){
+  const m=ctx.measureText(text);
+  ctx.fillStyle='rgba(6,6,16,0.74)';
+  ctx.beginPath();ctx.roundRect(x-5,y-12,m.width+12,17,5);ctx.fill();
+  ctx.strokeStyle=withAlpha(col,0.33);ctx.lineWidth=0.5;ctx.stroke();
+  ctx.font="700 11px 'Space Mono',monospace";
+  ctx.fillStyle=col;ctx.shadowColor=col;ctx.shadowBlur=5;ctx.fillText(text,x,y);ctx.shadowBlur=0;
+}
+
+// ════════════════════════════════════════════════
+//  CORRECTION ARROW SYSTEM
+//  Each arrow = { from, to, col, label }
+//  Drawn with a bold tapered arrow + animated pulse
+// ════════════════════════════════════════════════
+function drawCorrectionArrow(fx,fy,tx,ty,col,label){
+  const dx=tx-fx, dy=ty-fy, len=Math.sqrt(dx*dx+dy*dy);
+  if(len<4)return;
+  const nx=dx/len, ny=dy/len; // unit
+  // Shaft
+  ctx.beginPath();ctx.moveTo(fx,fy);ctx.lineTo(tx,ty);
+  ctx.strokeStyle=col;ctx.lineWidth=3;ctx.lineCap='round';
+  ctx.shadowColor=col;ctx.shadowBlur=14;ctx.stroke();ctx.shadowBlur=0;
+  // Arrowhead (filled triangle)
+  const hlen=13, hwidth=7;
+  const px=-ny, py=nx; // perpendicular
+  ctx.beginPath();
+  ctx.moveTo(tx,ty);
+  ctx.lineTo(tx-nx*hlen+px*hwidth, ty-ny*hlen+py*hwidth);
+  ctx.lineTo(tx-nx*hlen-px*hwidth, ty-ny*hlen-py*hwidth);
+  ctx.closePath();
+  ctx.fillStyle=col;ctx.shadowColor=col;ctx.shadowBlur=10;ctx.fill();ctx.shadowBlur=0;
+  // Label pill
+  const midX=(fx+tx)/2, midY=(fy+ty)/2;
+  drawLabel(midX-30, midY-8, label, col);
+  // Outer pulse ring at tip
+  const pulse=(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches)?0.5:0.5+0.5*Math.sin(Date.now()*0.006);
+  ctx.beginPath();ctx.arc(tx,ty,10+pulse*6,0,Math.PI*2);
+  ctx.strokeStyle=col;ctx.lineWidth=1.5;ctx.globalAlpha=0.35*pulse;ctx.stroke();ctx.globalAlpha=1;
+}
+
+// Build correction arrows for each active bad posture
+function drawAllCorrectionArrows(data){
+  // data: { earM, shM, hiM, lSh, rSh, isBadShoulder, isBadTurtle, isBadTilt, isBadNeck, isBadTrunk, nA, tA, tiltDeg, lSh, rSh }
+  const {earM, shM, hiM, lSh, rSh, isBadShoulder, isBadTurtle, isBadTilt, isBadNeck, isBadTrunk, nA, tA, tiltDeg, tiltDir} = data;
+
+  // ① Rounded shoulder — arrow: pull shoulder back into alignment with hip
+  if(isBadShoulder && shM && hiM){
+    // Arrow from shoulder midpoint horizontally toward the hip's x position
+    const arrowLen = Math.min(Math.abs(shM.x - hiM.x) * 0.7, 50);
+    const dir = shM.x > hiM.x ? -1 : 1;
+    drawCorrectionArrow(
+      shM.x, shM.y - 8,
+      shM.x + dir*arrowLen, shM.y - 8,
+      '#f97316', '肩膀後收'
+    );
+  }
+
+  // ② Turtle neck — arrow: push head backward (horizontal, above shoulder)
+  if(isBadTurtle && earM && shM){
+    const arrowLen = 55;
+    const dir = earM.x > shM.x ? -1 : 1;
+    drawCorrectionArrow(
+      earM.x, earM.y - 20,
+      earM.x + dir*arrowLen, earM.y - 20,
+      '#a855f7', '頭後收'
+    );
+  }
+
+  // ③ Lateral tilt — arrow pointing to lower shoulder side: push it up
+  if(isBadTilt && lSh && rSh){
+    const lower = lSh.y > rSh.y ? lSh : rSh; // higher y = lower on screen
+    // Arrow points upward from lower shoulder
+    drawCorrectionArrow(
+      lower.x, lower.y + 10,
+      lower.x, lower.y - 44,
+      '#06b6d4', '調正肩膀'
+    );
+  }
+
+  // ④ Neck forward tilt — arrow: pull head back and up (push chin in)
+  if(isBadNeck && earM && shM){
+    // Arrow going backward from head toward a more upright position
+    // 「向後」＝臉朝向之反方向（原本固定朝影像右側，臉朝右時會變成向前）；朝向不明時以耳相對肩之位置推定
+    const fwd = (lastFacing!==null) ? lastFacing : (earM.x>=shM.x ? 1 : -1);
+    const arrowLen = Math.min(nA * 1.4, 60);
+    drawCorrectionArrow(
+      earM.x, earM.y,
+      earM.x - fwd*Math.sin(0.3)*arrowLen, earM.y - Math.cos(0.3)*arrowLen,
+      '#ef4444', '抬頭挺胸'
+    );
+  }
+
+  // ⑤ Trunk forward bend — arrow: push torso upright
+  if(isBadTrunk && shM && hiM){
+    const arrowLen = Math.min(tA * 1.2, 55);
+    // Arrow from shoulder upward-backward
+    drawCorrectionArrow(
+      shM.x, shM.y,
+      shM.x, shM.y - arrowLen,
+      '#eab308', '挺直腰背'
+    );
+  }
+}
+
+// 目前幀之座標換算基準（onPoseResults 每幀開頭更新）；換算與 cover 補償見 computeViewGeom
+let VG=computeViewGeom(0,0,0,0);
+function lmPx(lm){
+  return mapLandmark(lm,VG,facingMode==='user'); // 計算座標（等向、顯示尺度）；繪製時另加 VG.ox／oy 位移
+}
+
+// ── UI helpers ──
+function aCls(v,w,d){return v>=d?'danger':v>=w?'warn':'';}
+function setAngle(valId,barId,rawId,sm,raw,w,d,mx=90){
+  const cls=(sm===null||!isFinite(sm))?'na':aCls(sm,w,d);
+  const el=document.getElementById(valId);
+  if(sm===null||!isFinite(sm)){el.textContent='N/A';el.className='ang-val na';}
+  else{el.textContent=sm.toFixed(1);el.className='ang-val '+(cls||'');}
+  const bar=document.getElementById(barId);
+  bar.style.width=Math.min((sm===null||!isFinite(sm)?0:sm)/mx*100,100)+'%';
+  bar.className='bar-f '+(cls||'');
+  if(rawId){const r=document.getElementById(rawId);if(r)r.textContent='原始: '+(raw===null||!isFinite(raw)?'--':raw.toFixed(1))+'°';}
+}
+function chipCls(s,type){
+  if(type==='la')return s===1?'good':'warn';
+  if(type==='wr')return s===1?'good':s===2?'warn':'danger';
+  return s<=1?'good':s===2?'warn':'danger';
+}
+function setChip(cid,vid,score,cls,isStatic){
+  document.getElementById(cid).className='s-chip '+(cls||'')+(isStatic?' static':'');
+  const el=document.getElementById(vid);
+  if(score===null){el.textContent='-';el.className='sc-val na';}
+  else{el.textContent=score+(isStatic?' ⚡':'');el.className='sc-val '+(cls||'');}
+}
+function setRula(grand,gA,gB,ip,staticBonus){
+  ['rulaRingP','rulaRingFill'].forEach(id=>{
+    const r=document.getElementById(id);if(!r)return;
+    if(grand===null){r.style.strokeDashoffset='188.5';r.className='r-fill';}
+    else{r.style.strokeDashoffset=(188.5*(1-Math.min(grand/7,1))).toFixed(1);r.className='r-fill '+(ip?ip.cls:'');}
+  });
+  ['rulaNumP','rulaNum'].forEach(id=>{
+    const n=document.getElementById(id);if(!n)return;
+    if(grand===null){n.textContent='-';n.className='r-num na';}
+    else{n.textContent=grand;n.className='r-num '+(ip?ip.cls:'');}
+  });
+  ['rulaLvP','rulaLv'].forEach(id=>{
+    const el=document.getElementById(id);if(!el)return;
+    el.textContent=ip?ip.lv:'等待偵測';el.className='rula-lv '+(ip?ip.cls:'');
+  });
+  ['rulaActP','rulaAct'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=ip?ip.act:'請啟動攝影機';});
+  document.getElementById('rulaA').textContent=gA===null?'-':gA;
+  document.getElementById('rulaB').textContent=gB===null?'-':(staticBonus?gB+' ⚡':gB);
+  document.getElementById('rulaGrand').textContent=grand===null?'-':grand;
+  const badge=document.getElementById('rulaBadge');
+  badge.className='rula-badge '+(ip?ip.cls:'');
+  document.getElementById('badgeScore').textContent=grand===null?'-':grand;
+  document.getElementById('badgeScore').className='rb-score '+(ip?ip.cls:'');
+  document.getElementById('badgeLv').textContent=ip?ip.lv:'等待偵測';
+  document.getElementById('badgeLv').className='rb-lv '+(ip?ip.cls:'');
+  document.getElementById('rulaCard').className='gc '+(ip?ip.cls:'');
+  document.getElementById('rulaCardP').className='gc '+(ip?ip.cls:'');
+  const note=document.getElementById('staticBonusNote');
+  if(note) note.style.display=(staticBonus && grand!==null)?'block':'none';
+  if(grand===null)setGroupADefaultNote(false); // 無人／低信心／未評分時隱藏；有資料時由 onPoseResults 於 setRula 之後重新判定
+}
+
+// Detection card updater
+function updateDetCard(cardId,valId,statId,val,isBad,badCls,goodTxt,badTxt){
+  document.getElementById(cardId).className='det-card '+(isBad?'t-'+badCls:'');
+  const ve=document.getElementById(valId);
+  if(val===null){ve.textContent='--';ve.className='det-val';}
+  else{ve.textContent=val.toFixed(1);ve.className='det-val '+(isBad?'c-'+badCls:'');}
+  const se=document.getElementById(statId);
+  se.textContent=val===null?'—':isBad?badTxt:goodTxt;
+  se.className='det-status '+(val===null?'':(isBad?'bad-'+badCls:'ok'));
+}
+function updateTiltCard(tiltSmooth,isBad,dir){
+  document.getElementById('cardTilt').className='tilt-row '+(isBad?'t-tilt':'');
+  const v=document.getElementById('dTiVal');
+  v.textContent=(tiltSmooth===null?'--':tiltSmooth.toFixed(1))+'°';
+  v.className='tr-val '+(isBad?'active':'');
+  document.getElementById('dTiDir').textContent=dir;
+}
+function setPills(sh,tu,ti,nk,tr){
+  document.getElementById('pillShoulder').classList.toggle('show',sh);
+  document.getElementById('pillTurtle').classList.toggle('show',tu);
+  document.getElementById('pillTilt').classList.toggle('show',ti);
+  document.getElementById('pillNeck').classList.toggle('show',nk);
+  document.getElementById('pillTrunk').classList.toggle('show',tr);
+}
+function updateConfidenceUI(avgConf,low){
+  const pct=Math.round(avgConf*100);
+  const cls = low ? 'danger' : (avgConf<CONF_EXIT_LOW ? 'warn' : '');
+  const el=document.getElementById('confVal');
+  if(el){el.textContent=pct+'%';el.className='conf-val '+cls;}
+  const bar=document.getElementById('confBar');
+  if(bar){bar.style.width=Math.min(pct,100)+'%';bar.className='bar-f '+cls;}
+}
+function fmt(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+String(Math.floor(s%60)).padStart(2,'0');}
+// Group A 預設值提示（僅介面，不影響任何計算）：上臂／下臂／手腕左右皆無資料時，計分以預設值代入（uaW=0、laW=80、wrW=0，見 onPoseResults）
+function setGroupADefaultNote(show,dUA,dLA,dWR){
+  const el=document.getElementById('gaDefaultNote'); if(!el)return;
+  if(!show){el.style.display='none';return;}
+  const items=[]; if(dUA)items.push('上臂（以 0° 計）'); if(dLA)items.push('下臂（以 80° 計）'); if(dWR)items.push('手腕（以 0° 計）');
+  el.textContent='Group A 使用預設值：'+items.join('、')+'未偵測（需手肘、手腕入鏡），此分數僅供參考';
+  el.style.display='block';
+}
+
+// ── 未偵測時重設即時畫面（C2）──
+// 人離開畫面或兩肩皆不可見時，原程式只顯示提示、不更新面板，畫面會停留在最後一次有效幀之數值（信心度、RULA 分數等）。
+// 連續 NO_PERSON_CLEAR_FRAMES 幀後，將即時畫面恢復為「未偵測」狀態；不動計數、有效時間、逐幀紀錄與 CSV。
+function resetLiveUI(){
+  const c=document.getElementById('confVal'); if(c){c.textContent='--%';c.className='conf-val';}
+  const cb=document.getElementById('confBar'); if(cb){cb.style.width='0%';cb.className='bar-f';}
+  document.getElementById('lowConfWarn').style.display='none';
+  setRula(null,null,null,{lv:'未偵測到人體',act:'請進入鏡頭並確認上半身在畫面中',cls:''},0);
+  ['chipNeck','chipTrunk','chipUA','chipLA','chipWR'].forEach(id=>setChip(id,id+'Val',null,''));
+  setChip('chipLeg','chipLegVal',null,''); document.getElementById('chipLegVal').textContent='1'; // 腿部為固定值 1（非量測），維持啟動時之顯示
+  setAngle('neckVal','neckBar','neckRawLbl',null,null,NECK_W,NECK_D);
+  setAngle('trunkVal','trunkBar','trunkRawLbl',null,null,TRUNK_W,TRUNK_D);
+  setAngle('uaLVal','uaLBar',null,null,null,UA_W,UA_D,90);
+  setAngle('uaRVal','uaRBar',null,null,null,UA_W,UA_D,90);
+  setAngle('laLVal','laLBar',null,null,null,LA_LO,LA_HI,180);
+  setAngle('laRVal','laRBar',null,null,null,LA_LO,LA_HI,180);
+  setAngle('wrLVal','wrLBar',null,null,null,WR_W,WR_D,60);
+  setAngle('wrRVal','wrRBar',null,null,null,WR_W,WR_D,60);
+  updateDetCard('cardShoulder','dShVal','dShStat',null,false,'shoulder','','');
+  updateDetCard('cardTurtle','dTuVal','dTuStat',null,false,'turtle','','');
+  updateTiltCard(null,false,'方向 —');
+  const vn=document.getElementById('viewNote'); if(vn){vn.textContent='視角 —';vn.className='view-note';}
+  setPills(false,false,false,false,false);
+  document.getElementById('dangerVfx').classList.remove('on');
+  const bb=document.getElementById('beepBar'); bb.style.width='0%'; bb.className='beep-f';
+  const sv=document.getElementById('streakVal'); sv.textContent='0.0s'; sv.className='streak-v';
+  neckHist=[]; trunkHist=[]; uaHist=[]; shoulderHist=[]; drawChart();
+  resetEMA(); // 濾波值與靜態計時不承接離開前之舊值
+}
+// 每個未偵測幀呼叫一次：兩種分支皆顯示提示（兩肩不可見者提示文字不同），並於連續達門檻時重設畫面一次
+function handleAbsentFrame(kind){
+  const nd=document.getElementById('noDetect');
+  nd.innerHTML=(kind==='shoulders')?'偵測中…<br>請確認雙肩皆在畫面中':'偵測中…<br>請確認上半身在畫面中';
+  nd.style.display='block';
+  absentFrames++;
+  if(absentFrames>=NO_PERSON_CLEAR_FRAMES&&!liveUiCleared){resetLiveUI();liveUiCleared=true;}
+}
+
+// ── Session timer ──
+setInterval(()=>{
+  if(!sessionStart||gapStartTs!==null)return; // gap（暫停／中斷）期間畫面凍結
+  const el=activeElapsedSec();
+  document.getElementById('tSession').textContent=fmt(el);
+  document.getElementById('tBad').textContent=fmt(badTotal);
+  document.getElementById('tPct').textContent=(validSec<1?'--':(badTotal/validSec*100).toFixed(1))+'%'; // 分母＝有效監測時間；尚無有效資料時顯示 --
+},500);
+
+// ── Chart ──
+const cc=document.getElementById('chartCanvas'), cct=cc.getContext('2d');
+function drawChart(){
+  const w=cc.width,h=cc.height,MAX=90;
+  cct.clearRect(0,0,w,h);
+  cct.fillStyle='rgba(8,8,22,0.88)';cct.fillRect(0,0,w,h);
+  [20,45].forEach(v=>{const y=h-(v/MAX)*h;cct.beginPath();cct.moveTo(0,y);cct.lineTo(w,y);cct.strokeStyle='rgba(255,255,255,0.04)';cct.lineWidth=1;cct.setLineDash([3,5]);cct.stroke();cct.setLineDash([]);});
+  const ty=h-(20/MAX)*h;cct.beginPath();cct.moveTo(0,ty);cct.lineTo(w,ty);cct.strokeStyle='rgba(239,68,68,0.18)';cct.lineWidth=1;cct.setLineDash([4,6]);cct.stroke();cct.setLineDash([]);
+  function ds(hist,col){
+    if(hist.length<2)return;
+    const grad=cct.createLinearGradient(0,0,0,h);grad.addColorStop(0,col+'2a');grad.addColorStop(1,col+'00');
+    cct.beginPath();hist.forEach((v,i)=>{const x=i/(HIST-1)*w,y=h-Math.min(v,MAX)/MAX*h;i?cct.lineTo(x,y):cct.moveTo(x,y);});
+    cct.lineTo((hist.length-1)/(HIST-1)*w,h);cct.lineTo(0,h);cct.closePath();cct.fillStyle=grad;cct.fill();
+    cct.beginPath();hist.forEach((v,i)=>{const x=i/(HIST-1)*w,y=h-Math.min(v,MAX)/MAX*h;i?cct.lineTo(x,y):cct.moveTo(x,y);});
+    cct.strokeStyle=col;cct.lineWidth=1.5;cct.shadowColor=col;cct.shadowBlur=3;cct.stroke();cct.shadowBlur=0;
+  }
+  ds(neckHist,'#06b6d4');ds(trunkHist,'#eab308');ds(uaHist,'#f97316');ds(shoulderHist,'#a855f7');
+}
+
+// ── CSV Export ──
+// 匯出用安全數字格式化：null／NaN 一律輸出空字串，絕不以 0 頂替
+// （避免「無法量測」被誤讀為「量到 0」或某個具體分數）。
+function csvNum(v,dec){
+  if(v===null||v===undefined||!isFinite(v))return '';
+  return dec!==undefined? v.toFixed(dec) : v;
+}
+// tsStr：選填的檔名時間戳記字串；供 endSessionAndReport() 與 HTML 報告共用同一組時間戳記，
+// 未提供時（例如使用者手動點擊下載按鈕）沿用原本各自產生時間戳記的行為。
+function exportCSV(tsStr){
+  if(!dataLog.length){alert('尚無數據，請先啟動監測。');return;}
+  const hdr=['Timestamp_ms','Elapsed_s','Neck_Raw','Neck_EMA','Neck_Cal','Trunk_Raw','Trunk_EMA','Trunk_Cal','UA_L','UA_R','LA_L','LA_R','WR_L','WR_R','Score_Neck','Score_Trunk','Score_Leg','Score_UA','Score_LA','Score_WR','GroupA','GroupB','StaticBonusB','RULA_Grand','Is_Bad','Bad_Streak_s','Calibrated','RoundedShoulder_px','TurtleNeck_px','LateralTilt_deg','RoundedShoulder_flag','TurtleNeck_flag','LateralTilt_flag','NeckStatic_flag','TrunkStatic_flag','AvgConfidence_pct','LowConf_Excluded','HipMissing_flag','DetMode','View_Phi_deg','View_Class','Facing','TrunkLen_px','ShoulderWidth_px','EarShoulderVert_px','HeadSize_px','HeadPitch_deg','CVA_Raw_deg','CVA_EMA_deg','CVA_flag','TrunkLeanAux_Raw_deg','TrunkLeanAux_EMA_deg','TrunkLeanAux_flag','TiltValid_new','Conf6_pct','ConfNear_pct','ConfEMA_pct','FrameIndex'].join(',');
+  const rows=dataLog.map(d=>{
+    // 髖部缺失的這一幀：Trunk_Raw / Trunk_EMA / Trunk_Cal / RoundedShoulder_px 一律輸出空字串，
+    // 不論內部（為了畫面平滑）是否仍保留前一筆有效值，確保匯出資料不會被誤讀為「量到 0」或「姿勢正常」，
+    // 並可透過 HipMissing_flag 篩選出這些不可信的幀。
+    const tRc    = d.hipMissing ? '' : csvNum(d.tR,2);
+    const tEc    = d.hipMissing ? '' : csvNum(d.tE,2);
+    const tCc    = d.hipMissing ? '' : csvNum(d.tC,2);
+    const shFwdC = d.hipMissing ? '' : csvNum(d.shFwd,2);
+    return [
+      d.ts, d.el.toFixed(2),
+      csvNum(d.nR,2), csvNum(d.nE,2), csvNum(d.nC,2),
+      tRc, tEc, tCc,
+      d.uaL!==null?d.uaL.toFixed(2):'', d.uaR!==null?d.uaR.toFixed(2):'',
+      d.laL!==null?d.laL.toFixed(2):'', d.laR!==null?d.laR.toFixed(2):'',
+      d.wrL!==null?d.wrL.toFixed(2):'', d.wrR!==null?d.wrR.toFixed(2):'',
+      csvNum(d.sNeck), csvNum(d.sTrunk), 1, csvNum(d.sUA), csvNum(d.sLA), csvNum(d.sWR),
+      csvNum(d.gA), csvNum(d.gB), d.staticBonusB||0, csvNum(d.grand),
+      d.bad?1:0, d.streak.toFixed(2), d.cal?1:0,
+      shFwdC, csvNum(d.tuFwd,2), csvNum(d.tiDeg,2),
+      d.isSh?1:0, d.isTu?1:0, d.isTi?1:0,
+      d.neckStaticFlag?1:0, d.trunkStaticFlag?1:0,
+      (d.avgConf*100).toFixed(1), d.lowConf?1:0,
+      d.hipMissing?1:0,
+      d.mode, csvNum(d.phi,1), d.viewClass, d.facing===null||d.facing===undefined?'':d.facing,
+      csvNum(d.TL,1), csvNum(d.SW,1), csvNum(d.ESV,1), csvNum(d.HS,1), csvNum(d.headPitch,2),
+      csvNum(d.cvaRaw,2), csvNum(d.cvaS,2), d.cvaFlag?1:0,
+      csvNum(d.leanRaw,2), csvNum(d.leanS,2), d.leanFlag?1:0, d.tiltOk?1:0,
+      (d.conf6*100).toFixed(1), (d.confNear*100).toFixed(1),
+      (d.confEma*100).toFixed(1), d.frameIdx
+    ].join(',');
+  });
+  const csv='\uFEFF'+[...buildCsvComments(),hdr,...rows].join('\n'); // 註解列（# 開頭）置於欄位標頭之前；欄位順序不變
+  const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
+  const stamp = tsStr || localStamp();
+  const a=document.createElement('a');a.href=url;a.download='Chris_Posture_'+stamp+'.csv';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+}
+
+// ═══════════════════════════════════════════════
+//  SESSION REPORT (結束並產生報告)
+// ═══════════════════════════════════════════════
+async function endSessionAndReport(){
+  if(!dataLog.length){alert('尚無數據，請先啟動監測一段時間再結束。');return;}
+  // 項目 3：於關閉暫停／中斷「之前」取得有效時長（暫停中則截至暫停起點），不含暫停與中斷時間
+  const finalElapsed=activeElapsedSec();
+  // 停止攝影機與偵測迴圈
+  stopRAF();
+  if(activeStream){await hardStop(activeStream);activeStream=null;}
+  document.getElementById('video').style.display='none';
+  document.getElementById('statusBadge').textContent='OFFLINE';
+  document.getElementById('liveBadge').style.display='none';
+  document.getElementById('flipBtn').style.display='none';
+  document.getElementById('pauseBtn').style.display='none';
+  document.getElementById('pausedBadge').style.display='none';
+  document.getElementById('pausedOverlay').style.display='none';
+  gapEnd('pause'); gapEnd('hidden'); gapEnd('camera'); // 關閉所有 gap 並寫入 gapLog（供 CSV／報告列出）
+  isPaused=false;
+  await releaseWakeLock(); hideBanner(); document.title=BASE_TITLE;
+  document.getElementById('rulaBadge').style.display='none';
+
+  // 共用同一組時間戳記檔名，讓 CSV 與 HTML 報告成對保存、方便比對
+  const sessionStamp=localStamp();
+
+  // 資料遺失風險防範：在停用 exportBtn 之前，先自動觸發一次完整原始數據 CSV 下載，
+  // 確保即使使用者忘記手動匯出，結束 session 時系統也會自動備份逐幀數據
+  // （HTML 報告僅含統計摘要，CSV 才是可供稽核／重新分析的完整記錄）。
+  exportCSV(sessionStamp);
+
+  document.getElementById('exportBtn').disabled=true;
+  document.getElementById('reportBtn').disabled=true;
+  document.getElementById('triggerCalBtn').disabled=true;
+
+  generateReportFile(sessionStamp,finalElapsed);
+
+  // 顯示啟動畫面以便重新開始下一次 session
+  const ls=document.getElementById('launchScreen');
+  ls.style.display='flex'; ls.style.opacity='1';
+  const sb=document.getElementById('startBtn');
+  sb.innerHTML='<span class="btn-sp">&#9654;</span> 重新開始監測';
+  sb.disabled=false; sb.classList.remove('loading');
+}
+
+function generateReportFile(tsStr,elapsedSec){
+  // 項目 4：分母＝有效監測時間（validSec：偵測到人體且非低信心之幀 dt 累加）；平均／最大值由全部有效幀累計（rulaAgg）
+  const elapsed=(elapsedSec!==undefined)?elapsedSec:activeElapsedSec();
+  const hasValid=validSec>0&&rulaAgg.w>0;
+  const avgRula=hasValid?rulaAgg.sum/rulaAgg.w:null; // 時間加權平均
+  const maxRula=rulaAgg.n>0?rulaAgg.max:null;
+  const overTime=badTotal;
+  const overPct=validSec>0?(overTime/validSec*100):null;
+
+  const vt=detStats.validTime;
+  const mkRows=(mode,defs)=>defs.map(r=>{
+    const st=detStats[mode][r.key];
+    return {name:r.name,count:st.count,time:st.time,pct:validSec>0?(st.time/validSec*100):null,
+            vpct:(r.vk&&vt[r.vk]>0)?(st.time/vt[r.vk]*100):null};
+  });
+  const detTables=[
+    {label:'新版（CVA／軀幹前傾輔助）',
+     note:'CVA 以肩點近似 C7、僅在 φ≥'+VIEW_MIN_PHI_DEG+'° 之側面／斜側面有效；軀幹前傾為輔助指標，與軀幹角度為同一量。「佔有效量測時長」之分母為該指標可量測之累積時間。',
+     rows:mkRows('new',[{name:'前頭姿勢（CVA<'+CVA_THR_DEG+'°）',key:'turtle',vk:'cva'},
+                        {name:'軀幹前傾（輔助，>'+TRUNK_LEAN_AUX_THR_DEG+'°）',key:'shoulder',vk:'lean'},
+                        {name:'身體側傾（僅 φ<'+TILT_MAX_PHI_DEG+'° 有效）',key:'tilt',vk:'tilt'}])},
+    {label:'舊版（肩寬正規化）',
+     note:'保留供比較。側面視角下肩寬趨近 0，比值不穩定，統計結果不宜作為效度證據。',
+     rows:mkRows('legacy',[{name:'圓肩',key:'shoulder'},{name:'烏龜頸',key:'turtle'},{name:'身體側傾',key:'tilt'}])},
+    {label:'RULA 關節角度警示（與演算法選擇無關）',
+     note:'頸部前傾、軀幹彎曲為 RULA 關節角度警示（≥'+NECK_D+'°／≥'+TRUNK_D+'°）；頸部需耳點可見、軀幹需髖點可見方可量測，「佔有效量測時長」之分母為該部位可量測之累積時間。',
+     rows:mkRows('common',[{name:'頸部前傾（≥'+NECK_D+'°）',key:'neck',vk:'neck'},{name:'軀幹彎曲（≥'+TRUNK_D+'°）',key:'trunk',vk:'trunk'}])}
+  ];
+  const quality={elapsed,validSec,lowConfSec,noPersonSec,totalFrames,detectedFrames,validFramesN,lowConfFrames,noPersonFrames,
+                 storedRows:dataLog.length,logStride,logEvents:logEvents.slice(),gaps:gapLog.slice(),gsum:gapSummary()};
+
+  const chartImg = buildScoreChartImage(dataLog);
+
+  const html = buildReportHTML({elapsed,hasValid,avgRula,maxRula,overTime,overPct,detTables,chartImg,quality});
+  const stamp = tsStr || localStamp();
+  downloadHTML(html,'Chris_Posture_Report_'+stamp+'.html');
+}
+
+function buildScoreChartImage(log){
+  const w=760,h=260,pad=40;
+  const cvs=document.createElement('canvas'); cvs.width=w; cvs.height=h;
+  const c=cvs.getContext('2d');
+  c.fillStyle='#ffffff'; c.fillRect(0,0,w,h);
+  const pts=log.filter(d=>!d.lowConf && d.grand!==null && d.grand!==undefined && isFinite(d.grand));
+  if(!pts.length){
+    c.fillStyle='#999'; c.font='14px sans-serif'; c.fillText('無可信資料',w/2-36,h/2);
+    return cvs.toDataURL('image/png');
+  }
+  const maxEl=Math.max(...pts.map(p=>p.el),1);
+  const maxY=7;
+  // grid
+  c.strokeStyle='#e5e7eb'; c.lineWidth=1; c.font='11px sans-serif'; c.fillStyle='#6b7280';
+  for(let y=0;y<=maxY;y++){
+    const yy=h-pad-(y/maxY)*(h-pad*2);
+    c.beginPath();c.moveTo(pad,yy);c.lineTo(w-pad,yy);c.stroke();
+    c.fillText(String(y),8,yy+4);
+  }
+  // 危險門檻線（RULA ≥5）
+  const ty=h-pad-(5/maxY)*(h-pad*2);
+  c.strokeStyle='#ef4444'; c.setLineDash([5,4]);
+  c.beginPath();c.moveTo(pad,ty);c.lineTo(w-pad,ty);c.stroke(); c.setLineDash([]);
+  c.fillStyle='#ef4444'; c.fillText('危險門檻 (5)',w-pad-72,ty-6);
+  // 折線
+  c.beginPath();
+  pts.forEach((p,i)=>{
+    const x=pad+(p.el/maxEl)*(w-pad*2);
+    const y=h-pad-(Math.min(p.grand,maxY)/maxY)*(h-pad*2);
+    i?c.lineTo(x,y):c.moveTo(x,y);
+  });
+  c.strokeStyle='#3b82f6'; c.lineWidth=2; c.stroke();
+  // 座標軸標籤
+  c.fillStyle='#374151'; c.font='13px sans-serif';
+  c.fillText('RULA 分數時間軸',pad,20);
+  c.font='11px sans-serif';
+  c.fillText('時間 (秒) →',w-pad-46,h-8);
+  return cvs.toDataURL('image/png');
+}
+
+function buildReportHTML(s){
+  const fmtT=sec=>{const m=Math.floor(sec/60),ss=Math.floor(sec%60);return m+'分'+String(ss).padStart(2,'0')+'秒';};
+  const NA='無可信資料';
+  const q=s.quality;
+  const dateStr=new Date().toLocaleString('zh-TW');
+  const pctCell=v=>v===null?NA:v.toFixed(1)+'%';
+  const tablesHtml=s.detTables.map(t=>{
+    const rows=t.rows.map(r=>`<tr><td>${r.name}</td><td>${r.count} 次</td><td>${fmtT(r.time)}</td><td>${pctCell(r.pct)}</td><td>${r.vpct===null?'—':r.vpct.toFixed(1)+'%'}</td></tr>`).join('');
+    return `<h3>${t.label}</h3><table><thead><tr><th>偵測類型</th><th>觸發次數</th><th>總時長</th><th>佔有效監測時間</th><th>佔該指標可量測時長</th></tr></thead><tbody>${rows}</tbody></table><p class="note">${t.note}</p>`;
+  }).join('');
+  const g=q.gsum;
+  const gapRows=q.gaps.length?q.gaps.map(x=>`<tr><td>${{pause:'使用者暫停',hidden:'分頁進入背景',camera:'相機無法恢復'}[x.type]||x.type}</td><td>${localClock(x.start)}</td><td>${localClock(x.end)}</td><td>${fmtT((x.end-x.start)/1000)}</td></tr>`).join(''):'<tr><td colspan="4">無</td></tr>';
+  const decNote=q.logStride>1?`<p class="note">⚠ 逐幀資料已降採樣為 1/${q.logStride}（共 ${q.logEvents.length} 次；儲存 ${q.storedRows} 列）。本報告之統計均由全部幀逐幀累計，不受降採樣影響；CSV 開頭註解列亦有記載。</p>`:'';
+  const box=(cls,v,l)=>`<div class="stat-box ${cls}"><div class="v${v===NA?' na':''}">${v}</div><div class="l">${l}</div></div>`;
+  return `<!DOCTYPE html>
+<html lang="zh-TW"><head><meta charset="UTF-8"><title>坐姿監控 Session 報告</title>
+<style>
+body{font-family:'Microsoft JhengHei','PingFang TC',Arial,sans-serif;max-width:820px;margin:40px auto;color:#1f2937;line-height:1.6;padding:0 20px;}
+h1{font-size:22px;border-bottom:3px solid #3b82f6;padding-bottom:10px;}
+h2{font-size:16px;margin-top:28px;color:#1e3a8a;}
+.meta{color:#6b7280;font-size:13px;margin-bottom:20px;}
+table{width:100%;border-collapse:collapse;margin-top:10px;}
+th,td{border:1px solid #e5e7eb;padding:8px 12px;text-align:left;font-size:13px;}
+th{background:#f3f4f6;}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px;}
+.stat-box{border:1px solid #e5e7eb;border-radius:8px;padding:14px;text-align:center;background:#f9fafb;}
+.stat-box .v{font-size:24px;font-weight:800;color:#3b82f6;}
+.stat-box .v.na{font-size:15px;color:#9ca3af;}
+.stat-box .l{font-size:11px;color:#6b7280;margin-top:4px;}
+.stat-box.danger .v{color:#ef4444;}
+.stat-box.danger .v.na{color:#9ca3af;}
+h3{font-size:14px;margin:18px 0 4px;color:#1e3a8a;}
+.note{font-size:11px;color:#6b7280;margin:4px 0;}
+img{max-width:100%;border:1px solid #e5e7eb;border-radius:8px;margin-top:10px;}
+.printbar{margin:20px 0;}
+button{padding:8px 16px;border-radius:6px;border:1px solid #3b82f6;background:#3b82f6;color:#fff;cursor:pointer;font-size:13px;}
+@media print{.printbar{display:none;}}
+footer{margin-top:30px;font-size:11px;color:#9ca3af;border-top:1px solid #e5e7eb;padding-top:10px;}
+</style></head><body>
+<h1>學生坐姿矯正系統 — Session 分析報告</h1>
+<div class="meta">產生時間：${dateStr}　｜　監測時長（不含暫停／中斷）：${fmtT(s.elapsed)}　｜　有效監測時間：${q.validSec>0?fmtT(q.validSec):NA}　｜　總幀數：${q.totalFrames}</div>
+<div class="printbar"><button onclick="window.print()">列印 / 另存為 PDF</button></div>
+
+<h2>整體 RULA 評分統計（僅計入可信幀）</h2>
+<div class="stat-grid">
+  ${box('',s.hasValid?s.avgRula.toFixed(2):NA,'平均 RULA 分數（時間加權）')}
+  ${box('danger',s.maxRula===null?NA:String(s.maxRula),'最高 RULA 分數')}
+  ${box('danger',s.overPct===null?NA:fmtT(s.overTime),'超標(≥5)累積時間')}
+  ${box('danger',s.overPct===null?NA:s.overPct.toFixed(1)+'%','超標佔有效監測時間')}
+</div>
+${s.hasValid?'':'<p class="note">本次 Session 沒有可信之有效幀（無人偵測或信心度持續偏低），故不提供分數與比例統計。</p>'}
+
+<h2>資料品質</h2>
+<table>
+<tbody>
+<tr><th>監測時長（不含暫停／中斷）</th><td>${fmtT(q.elapsed)}</td><th>有效監測時間</th><td>${q.validSec>0?fmtT(q.validSec):NA}</td></tr>
+<tr><th>低信心時間</th><td>${fmtT(q.lowConfSec)}</td><th>無人偵測時間</th><td>${fmtT(q.noPersonSec)}</td></tr>
+<tr><th>總幀數</th><td>${q.totalFrames}</td><th>偵測到人體幀數</th><td>${q.detectedFrames}</td></tr>
+<tr><th>有效幀數</th><td>${q.validFramesN}</td><th>低信心幀數／無人幀數</th><td>${q.lowConfFrames}／${q.noPersonFrames}</td></tr>
+<tr><th>暫停</th><td>${g.pause.n} 次，共 ${fmtT(g.pause.ms/1000)}</td><th>背景中斷／相機中斷</th><td>${g.hidden.n} 次（${fmtT(g.hidden.ms/1000)}）／${g.camera.n} 次</td></tr>
+</tbody>
+</table>
+${decNote}
+<h3>暫停與中斷紀錄</h3>
+<table><thead><tr><th>類型</th><th>開始（本地時間）</th><th>結束</th><th>時長</th></tr></thead><tbody>${gapRows}</tbody></table>
+
+<h2>不良姿勢偵測統計（新舊演算法並列）</h2>
+${tablesHtml}
+
+<h2>RULA 分數時間軸</h2>
+<img src="${s.chartImg}" alt="RULA score timeline chart">
+
+<footer>此報告由「學生坐姿矯正系統」自動產生，採用 MediaPipe Pose 姿勢估計，並依 RULA（Rapid Upper Limb Assessment）之簡化實作計算：Group A 未含肌肉使用與施力分數，Group B 僅含靜態維持加分，腿部固定為 1，因此輸出不是標準 RULA Grand Score。所有百分比之分母為「有效監測時間」（排除暫停、背景中斷、無人偵測與低信心時段）。<br>本報告為展示型系統產出：未與人工 RULA 評分比對、未跨情境驗證，不構成準確度或效度結論；非醫療診斷，亦不作為對學生的評比依據。</footer>
+</body></html>`;
+}
+
+function downloadHTML(html,filename){
+  const blob=new Blob([html],{type:'text/html;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ═══════════════════════════════════════════════
+//  MAIN POSE CALLBACK
+// ═══════════════════════════════════════════════
+function onPoseResults(results){
+  // 暫停／背景中斷期間可能仍有「飛行中」之幀回呼，一律丟棄，避免污染計時與紀錄
+  if(isPaused||isInterrupted())return;
+  if(!HAS_RO)resizeCanvas();
+  VG=computeViewGeom(canvas.width,canvas.height,video.videoWidth,video.videoHeight); // 顯示區與影像尺寸 → 計算座標基準（k＝1 時等同舊版）
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  const now=Date.now(),dt=now-prevTs;
+  fps=dt>0?Math.round(1000/dt):fps; prevTs=now;
+  document.getElementById('fpsTag').textContent=fps+' FPS';
+  const dtSec = dt>0 ? Math.min(dt/1000,1) : (fps>0?1/fps:0);
+  const inSession=(sessionStart!==null); // Session 開始前之幀不計入計數與有效時間
+  if(inSession)totalFrames++;
+
+  if(!results.poseLandmarks){
+    document.getElementById('noDetect').style.display='block';
+    document.getElementById('lowConfWarn').style.display='none';
+    document.getElementById('dangerVfx').classList.remove('on');
+    if(inSession){noPersonFrames++;noPersonSec+=dtSec;}
+    resetStaticState(neckStatic); resetStaticState(trunkStatic); emaConf=null; // 無人：靜態計時中斷、信心度 EMA 不沿用過期值
+    badStart=null; handleAbsentFrame('none'); return;
+  }
+  document.getElementById('noDetect').style.display='none';
+
+  const lm=results.poseLandmarks;
+
+  // ── 偵測可信度（耳/肩/髖 六個關鍵點平均 visibility）──
+  const CONF_IDX=[7,8,11,12,23,24];
+  const visOf=i=>(lm[i]&&lm[i].visibility!=null)?lm[i].visibility:0;
+  const avgConfidence6=CONF_IDX.reduce((s,i)=>s+visOf(i),0)/CONF_IDX.length;
+  const nearSide=pickNearSide(lm);
+  const avgConfidenceNear=nearSide==='L'?(visOf(7)+visOf(11)+visOf(23))/3:(visOf(8)+visOf(12)+visOf(24))/3;
+  const avgConfidence=(CONF_NEAR_SIDE_ONLY&&detMode==='new')?avgConfidenceNear:avgConfidence6;
+  // 項目 1：先 EMA、再以遲滯（進入 <0.55、離開 >0.65）判定；avgConfidence 仍為原始值（CSV AvgConfidence_pct 語意不變）
+  emaConf=(emaConf===null)?avgConfidence:(CONF_EMA_A*avgConfidence+(1-CONF_EMA_A)*emaConf);
+  if(!confLow&&emaConf<CONF_ENTER_LOW)confLow=true;
+  else if(confLow&&emaConf>CONF_EXIT_LOW)confLow=false;
+  const lowConfidence=confLow;
+  updateConfidenceUI(emaConf,confLow);
+  document.getElementById('lowConfWarn').style.display=lowConfidence?'block':'none';
+
+  const vis=i=>lm[i]&&lm[i].visibility>0.4;
+  const W=canvas.width, H=canvas.height;
+
+  const lEar =vis(7) ?lmPx(lm[7]) :null, rEar =vis(8) ?lmPx(lm[8]) :null;
+  const lSh  =vis(11)?lmPx(lm[11]):null, rSh  =vis(12)?lmPx(lm[12]):null;
+  const lElb =vis(13)?lmPx(lm[13]):null, rElb =vis(14)?lmPx(lm[14]):null;
+  const lWr  =vis(15)?lmPx(lm[15]):null, rWr  =vis(16)?lmPx(lm[16]):null;
+  const lIdx =vis(19)?lmPx(lm[19]):null, rIdx =vis(20)?lmPx(lm[20]):null;
+  const lPink=vis(17)?lmPx(lm[17]):null, rPink=vis(18)?lmPx(lm[18]):null;
+  const lHip =vis(23)?lmPx(lm[23]):null, rHip =vis(24)?lmPx(lm[24]):null;
+  if(!lSh&&!rSh){ // 兩肩皆不可見＝無法分析，視同無人
+    if(inSession){noPersonFrames++;noPersonSec+=dtSec;}
+    resetStaticState(neckStatic); resetStaticState(trunkStatic);
+    document.getElementById('dangerVfx').classList.remove('on'); badStart=null; handleAbsentFrame('shoulders'); return;
+  }
+  absentFrames=0; liveUiCleared=false; // C2：偵測恢復
+  if(inSession){
+    detectedFrames++;
+    if(lowConfidence){lowConfFrames++;lowConfSec+=dtSec;} else {validFramesN++;validSec+=dtSec;}
+  }
+
+  const shM =(lSh&&rSh)?midPt(lSh,rSh):(lSh||rSh);
+  const hiM =(lHip&&rHip)?midPt(lHip,rHip):(lHip||rHip);
+  const earM=(lEar&&rEar)?midPt(lEar,rEar):(lEar||rEar);
+  // 肩寬（左右肩膀距離，px）— 圓肩/烏龜頸門檻改用此值為基準，與離鏡頭遠近無關
+  const shoulderWidth=(lSh&&rSh)?Math.sqrt((rSh.x-lSh.x)**2+(rSh.y-lSh.y)**2):null;
+
+  // Standard angles
+  const neckRaw =earM?vertAngle(earM.x,earM.y,shM.x,shM.y):0;
+  // 髖部缺失時（hiM 為 null）trunkRaw 一律輸出 null，避免與「軀幹角度恰好 0 度」混淆
+  const hipMissing=!hiM;
+  const trunkRaw=hiM ?vertAngle(shM.x,shM.y,hiM.x,hiM.y):null;
+  const hasEar=!!(lEar||rEar),hasSh=!!(lSh&&rSh),hasHip=!!(lHip&&rHip);
+  const hasElb=!!(lElb||rElb),hasWr=!!(lWr||rWr);
+
+  // ── NEW DETECTIONS ──
+
+  // Rounded Shoulder（圓肩：改為量測「肩膀相對髖部」的水平偏移量，反映肩內收/前突程度。
+  // 與烏龜頸不同，這裡比較的是肩－髖這一組關節，而非耳－肩，避免兩者只是同一數值套不同門檻）
+  // 髖部缺失時 shFwd 一律為 null，不得以 0 代入運算，避免與「肩膀零偏移」混淆
+  let shFwd=null;
+  if(shM&&hiM) shFwd=Math.abs(shM.x-hiM.x);
+  const isBadShoulder=(shoulderWidth&&shFwd!==null)?shFwd>LEGACY_SHOULDER_THR_PCT*shoulderWidth:false;
+
+  // Turtle Neck（烏龜頸：維持原設計，量測「耳朵相對肩膀」的水平偏移量，反映頭部前伸程度。門檻：肩寬的 55%）
+  let tuFwd=0;
+  if(earM&&shM) tuFwd=Math.abs(earM.x-shM.x);
+  const isBadTurtle=shoulderWidth?tuFwd>LEGACY_TURTLE_THR_PCT*shoulderWidth:false;
+
+  // Lateral Tilt（角度量測，本身已與距離無關，維持不變）
+  let tiDeg=0, tiltDir='水平';
+  if(lSh&&rSh){
+    const dx=rSh.x-lSh.x,dy=rSh.y-lSh.y;
+    tiDeg=Math.abs(Math.deg(Math.atan2(dy,dx)));
+    if(tiDeg>90)tiDeg=180-tiDeg;
+    if(lSh.y<rSh.y-2)tiltDir='向左傾';
+    else if(rSh.y<lSh.y-2)tiltDir='向右傾';
+    else tiltDir='水平';
+  }
+  const isBadTilt=tiDeg>TILT_THR;
+
+  // EMA smooth
+  emaSh=(shFwd===null)?null:ema(emaOn?emaSh:null,shFwd,EMA_A); // 同上：髖部缺失時不沿用舊值
+  emaTu=ema(emaOn?emaTu:null,tuFwd,EMA_A);
+  emaTi=ema(emaOn?emaTi:null,tiDeg,EMA_A);
+  const sSmooth=emaOn?emaSh:shFwd;
+  const tSmooth=emaOn?emaTu:tuFwd;
+  const tiSmooth=emaOn?emaTi:tiDeg;
+  const isBadSh=(shoulderWidth&&sSmooth!==null)?sSmooth>LEGACY_SHOULDER_THR_PCT*shoulderWidth:false;
+  const isBadTu=shoulderWidth?tSmooth>LEGACY_TURTLE_THR_PCT*shoulderWidth:false;
+  const isBadTi=tiSmooth>TILT_THR;
+
+  // ══ V2：近側特徵點＋視角估計＋CVA＋軀幹前傾輔助（不依賴肩寬）══
+  const useNew=(detMode==='new');
+  const nIdx=nearSide==='L'?{ear:7,sh:11,hip:23,eye:2}:{ear:8,sh:12,hip:24,eye:5};
+  const nEar=vis(nIdx.ear)?lmPx(lm[nIdx.ear]):null;
+  const nShd=vis(nIdx.sh) ?lmPx(lm[nIdx.sh]) :null;
+  const nHip=vis(nIdx.hip)?lmPx(lm[nIdx.hip]):null;
+  const nEye=vis(nIdx.eye)?lmPx(lm[nIdx.eye]):null;
+  const nNose=vis(0)?lmPx(lm[0]):null;
+  const v2=computeV2({E:nEar,S:nShd,H:nHip,Eye:nEye,nose:nNose,phiDeg:estimateViewPhi(lm),facingPrev:lastFacing});
+  if(v2.facing!==null)lastFacing=v2.facing;
+  // 無效時清除 EMA（ema() 對 null 輸入會保留舊值，會讓視角切換後殘留過期數值）
+  emaCva =v2.cvaValid ?ema(emaOn?emaCva :null,v2.cva ,EMA_A):null;
+  emaLean=v2.leanValid?ema(emaOn?emaLean:null,v2.lean,EMA_A):null;
+  const cvaS =v2.cvaValid ?(emaOn?emaCva :v2.cva ):null;
+  const leanS=v2.leanValid?(emaOn?emaLean:v2.lean):null;
+  const isBadCva =(cvaS!==null)&&cvaS<CVA_THR_DEG;
+  const isBadLean=(leanS!==null)&&leanS>TRUNK_LEAN_AUX_THR_DEG;
+  const isBadTiNew=v2.tiltOk&&isBadTi;
+
+  tickCal(hasEar,hasSh,hasElb,hasWr,hasHip,neckRaw,trunkRaw);
+
+  // Calibrated angles
+  const neckCal =calPhase==='done'?Math.max(0,neckRaw -calNeckBase):neckRaw;
+  // trunkRaw 為 null（髖部缺失）時，trunkCal 同樣輸出 null，不套用校準偏移運算
+  const trunkCal=trunkRaw===null?null:(calPhase==='done'?Math.max(0,trunkRaw-calTrunkBase):trunkRaw);
+  emaNeck =ema(emaOn?emaNeck:null,neckCal,EMA_A);
+  // 輸入為 null（髖部缺失）時必須清除 EMA；ema() 對 null 會回傳舊值，會讓軀幹分數／Grand Score 在髖部已不在畫面時仍沿用過期數值
+  emaTrunk=(trunkCal===null)?null:ema(emaOn?emaTrunk:null,trunkCal,EMA_A);
+  const nA=emaOn?emaNeck:neckCal;
+  const tA=emaOn?emaTrunk:trunkCal;
+
+  // Limb angles
+  let uaL=null,uaR=null,laL=null,laR=null,wrL=null,wrR=null;
+  if(lSh&&lElb)uaL=Math.abs(vertAngle(lSh.x,lSh.y,lElb.x,lElb.y));
+  if(rSh&&rElb)uaR=Math.abs(vertAngle(rSh.x,rSh.y,rElb.x,rElb.y));
+  if(lSh&&lElb&&lWr)laL=jointAngle(lSh.x,lSh.y,lElb.x,lElb.y,lWr.x,lWr.y);
+  if(rSh&&rElb&&rWr)laR=jointAngle(rSh.x,rSh.y,rElb.x,rElb.y,rWr.x,rWr.y);
+  const lHand=lIdx||lPink, rHand=rIdx||rPink;
+  if(lElb&&lWr&&lHand)wrL=Math.abs(180-jointAngle(lElb.x,lElb.y,lWr.x,lWr.y,lHand.x,lHand.y));
+  if(rElb&&rWr&&rHand)wrR=Math.abs(180-jointAngle(rElb.x,rElb.y,rWr.x,rWr.y,rHand.x,rHand.y));
+  emaUAL=ema(emaOn?emaUAL:null,uaL,EMA_A); emaUAR=ema(emaOn?emaUAR:null,uaR,EMA_A);
+  emaLAL=ema(emaOn?emaLAL:null,laL,EMA_A); emaLAR=ema(emaOn?emaLAR:null,laR,EMA_A);
+  emaWRL=ema(emaOn?emaWRL:null,wrL,EMA_A); emaWRR=ema(emaOn?emaWRR:null,wrR,EMA_A);
+  const uaLA=emaOn?emaUAL:uaL, uaRA=emaOn?emaUAR:uaR;
+  const laLA=emaOn?emaLAL:laL, laRA=emaOn?emaLAR:laR;
+  const wrLA=emaOn?emaWRL:wrL, wrRA=emaOn?emaWRR:wrR;
+
+  // RULA scores
+  const sNeck=neckScore(nA),sTrunk=trunkScore(tA),sLeg=legScore();
+  // 靜態姿勢判定：角度連續 ≥60 秒變化 <5°，依 RULA 肌肉使用規則 +1 分（於 Group A/B 加總前納入）
+  // 項目 2：以「濾波前之校準角度」（neckCal／trunkCal）判定；低信心／耳點缺失／髖部缺失時重置，不累積靜態時間
+  if(lowConfidence){resetStaticState(neckStatic);resetStaticState(trunkStatic);}
+  else{
+    updateStaticState(neckStatic,earM?neckCal:null);
+    updateStaticState(trunkStatic,trunkCal);
+  }
+  const staticBonusB = (!lowConfidence && (neckStatic.isStatic||trunkStatic.isStatic)) ? 1 : 0;
+  const gBraw=groupB(sNeck,sTrunk,sLeg);
+  // gBraw 為 null（軀幹未評分，通常因髖部缺失）時，Group B 明確輸出 null，不套用靜態加分運算
+  const gB=(gBraw===null)?null:Math.min(gBraw+staticBonusB,7);
+  const uaW=uaLA!==null&&uaRA!==null?Math.max(uaLA,uaRA):uaLA??uaRA??0;
+  const laW=laLA!==null&&laRA!==null?[laLA,laRA].reduce((w,v)=>laScore(v)>laScore(w)?v:w):laLA??laRA??80;
+  const wrW=wrLA!==null&&wrRA!==null?Math.max(wrLA,wrRA):wrLA??wrRA??0;
+  const sUA=uaScore(uaW),sLA=laScore(laW),sWR=wrScore(wrW);
+  const gA=groupA(sUA,sLA,sWR);
+  const grand=grandScore(gA,gB);
+  const ip=grand===null?null:interp(grand);
+
+  const isBadNeck=nA>=NECK_D;
+  const isBadTrunk=(tA!==null&&isFinite(tA))?tA>=TRUNK_D:false;
+  const isBad=(grand!==null)&&grand>=5;
+
+  // 低信心度時暫停 RULA 評分呈現：分數環顯示 N/A，訊息改為提示重新對齊鏡頭，
+  // 內部仍會計算分數以利除錯與圖表連續性，但不作為正式評分結果，也不觸發 beep / 不計入不良比例。
+  // 髖部缺失時軀幹／Group B／Grand 皆為 null，同樣以明確的「未評分」狀態呈現，而非誤判為正常姿勢。
+  const ipDisplay=lowConfidence
+    ?{lv:'信心不足，已暫停',act:'請靠近鏡頭或改善光線後再試',cls:'warn'}
+    :(grand===null
+        ?{lv:'髖部未偵測，軀幹未評分',act:'請確保髖部入鏡以計算 RULA（簡化實作）',cls:'warn'}
+        :ip);
+
+  // Colors
+  const G='#22c55e',Y='#eab308',R='#ef4444',C='#06b6d4';
+  const nc=nA>=NECK_D?R:nA>=NECK_W?Y:G;
+  const tc=tA>=TRUNK_D?R:tA>=TRUNK_W?Y:G;
+  const uaC=uaW>=UA_D?R:uaW>=UA_W?Y:G;
+  const laC=(laW<LA_LO||laW>LA_HI)?Y:G;
+  const wrC=wrW>=WR_D?R:wrW>=WR_W?Y:G;
+
+  // ── DRAW SKELETON ──
+  // 繪製座標＝計算座標＋cover 裁切位移（VG.ox／oy）；k＝1 時位移為 0，不套用。位移只作用於繪製，不影響任何計算。
+  const drawShift=(VG.ox!==0||VG.oy!==0);
+  if(drawShift){ctx.save();ctx.translate(VG.ox,VG.oy);}
+  if(hiM)  drawLine(shM.x,shM.y,hiM.x,hiM.y,tc,4);
+  if(earM) drawLine(earM.x,earM.y,shM.x,shM.y,nc,4);
+  if(lSh&&rSh){
+    const tiShow=useNew?isBadTiNew:isBadTi; // 新版：側面視角側傾不適用，不以警示色繪製
+    const shCol=tiShow?C:'rgba(200,160,48,0.55)';
+    drawLine(lSh.x,lSh.y,rSh.x,rSh.y,shCol,tiShow?3:2);
+  }
+  if(lHip&&rHip)drawLine(lHip.x,lHip.y,rHip.x,rHip.y,'rgba(200,160,48,0.38)',2);
+  if(lSh&&lElb) drawLine(lSh.x,lSh.y,lElb.x,lElb.y,uaC,3);
+  if(rSh&&rElb) drawLine(rSh.x,rSh.y,rElb.x,rElb.y,uaC,3);
+  if(lElb&&lWr) drawLine(lElb.x,lElb.y,lWr.x,lWr.y,laC,3);
+  if(rElb&&rWr) drawLine(rElb.x,rElb.y,rWr.x,rWr.y,laC,3);
+  if(lWr&&lHand)drawLine(lWr.x,lWr.y,lHand.x,lHand.y,wrC,2);
+  if(rWr&&rHand)drawLine(rWr.x,rWr.y,rHand.x,rHand.y,wrC,2);
+  if(earM)drawArc(shM.x,shM.y,nA,nc,40);
+  if(hiM) drawArc(shM.x,shM.y,tA,tc,60);
+
+  // Nodes
+  [lEar,rEar].forEach(p=>p&&drawNode(p.x,p.y,isBadTu?'#a855f7':nc,5));
+  [lSh,rSh].forEach(p=>p&&drawNode(p.x,p.y,'#e0c030',7));
+  [lElb,rElb].forEach(p=>p&&drawNode(p.x,p.y,uaC,6));
+  [lWr,rWr].forEach(p=>p&&drawNode(p.x,p.y,wrC,5));
+  [lHip,rHip].forEach(p=>p&&drawNode(p.x,p.y,tc,6));
+
+  // Angle labels
+  const mark=calPhase==='done'?'D':'';
+  if(earM)drawLabel((earM.x+shM.x)/2+12,(earM.y+shM.y)/2,mark+nA.toFixed(1)+'°',nc);
+  if(hiM) drawLabel((shM.x+hiM.x)/2+12,(shM.y+hiM.y)/2,mark+tA.toFixed(1)+'°',tc);
+  if(lSh&&lElb)drawLabel((lSh.x+lElb.x)/2-40,(lSh.y+lElb.y)/2,uaLA!==null?uaLA.toFixed(0)+'°':'-',uaC);
+  if(rSh&&rElb)drawLabel((rSh.x+rElb.x)/2+8, (rSh.y+rElb.y)/2,uaRA!==null?uaRA.toFixed(0)+'°':'-',uaC);
+  if(lElb&&lWr)drawLabel((lElb.x+lWr.x)/2-36,(lElb.y+lWr.y)/2,laLA!==null?laLA.toFixed(0)+'°':'-',laC);
+  if(rElb&&rWr)drawLabel((rElb.x+rWr.x)/2+6, (rElb.y+rWr.y)/2,laRA!==null?laRA.toFixed(0)+'°':'-',laC);
+
+  // ════════ CORRECTION ARROWS ════════
+  // 低信心度時暫停矯正箭頭，避免根據不可靠的關鍵點給出錯誤的方向建議
+  if(!lowConfidence){
+    drawAllCorrectionArrows({
+      earM, shM, hiM, lSh, rSh,
+      isBadShoulder:useNew?false:isBadSh, isBadTurtle:useNew?isBadCva:isBadTu,
+      isBadTilt:useNew?isBadTiNew:isBadTi, isBadNeck, isBadTrunk,
+      nA, tA, tiltDeg:tiSmooth, tiltDir
+    });
+  }
+
+  if(drawShift)ctx.restore();
+
+  // ── UPDATE PANEL UI ──
+  setAngle('neckVal','neckBar','neckRawLbl',nA,neckRaw,NECK_W,NECK_D);
+  setAngle('trunkVal','trunkBar','trunkRawLbl',tA,trunkRaw,TRUNK_W,TRUNK_D);
+  setAngle('uaLVal','uaLBar',null,uaLA,uaL,UA_W,UA_D,90);
+  setAngle('uaRVal','uaRBar',null,uaRA,uaR,UA_W,UA_D,90);
+  setAngle('laLVal','laLBar',null,laLA,laL,LA_LO,LA_HI,180);
+  setAngle('laRVal','laRBar',null,laRA,laR,LA_LO,LA_HI,180);
+  setAngle('wrLVal','wrLBar',null,wrLA,wrL,WR_W,WR_D,60);
+  setAngle('wrRVal','wrRBar',null,wrRA,wrR,WR_W,WR_D,60);
+
+  setChip('chipNeck','chipNeckVal',sNeck,chipCls(sNeck,'neck'), !lowConfidence&&neckStatic.isStatic);
+  setChip('chipTrunk','chipTrunkVal',sTrunk,chipCls(sTrunk,'trunk'), !lowConfidence&&trunkStatic.isStatic);
+  setChip('chipLeg','chipLegVal',sLeg,'good');
+  setChip('chipUA','chipUAVal',sUA,chipCls(sUA,'ua'));
+  setChip('chipLA','chipLAVal',sLA,chipCls(sLA,'la'));
+  setChip('chipWR','chipWRVal',sWR,chipCls(sWR,'wr'));
+  setRula(lowConfidence?null:grand, lowConfidence?null:gA, lowConfidence?null:gB, ipDisplay, lowConfidence?0:staticBonusB);
+  { // Group A 預設值提示（僅介面；分數計算不變）
+    const dUA=(uaLA===null&&uaRA===null), dLA=(laLA===null&&laRA===null), dWR=(wrLA===null&&wrRA===null);
+    setGroupADefaultNote(!lowConfidence&&(dUA||dLA||dWR),dUA,dLA,dWR);
+  }
+
+  if(useNew){
+    updateDetCard('cardShoulder','dShVal','dShStat',leanS,isBadLean,'shoulder','正常','前傾偏大（輔助）');
+    updateDetCard('cardTurtle','dTuVal','dTuStat',cvaS,isBadCva,'turtle','正常','前頭姿勢');
+    updateTiltCard(v2.tiltOk?tiSmooth:null,isBadTiNew,v2.tiltOk?tiltDir:'側面視角不適用');
+  } else {
+    updateDetCard('cardShoulder','dShVal','dShStat',sSmooth,isBadSh,'shoulder','正常','圓肩偵測');
+    updateDetCard('cardTurtle','dTuVal','dTuStat',tSmooth,isBadTu,'turtle','正常','烏龜頸偵測');
+    updateTiltCard(tiSmooth,isBadTi,tiltDir);
+  }
+  updateViewNote(v2,nearSide);
+  // 新版：軀幹前傾為輔助指標，不觸發獨立警示膠囊（避免與「軀幹彎曲」重複警示）
+  const pSh=useNew?false:isBadSh, pTu=useNew?isBadCva:isBadTu, pTi=useNew?isBadTiNew:isBadTi;
+  setPills(!lowConfidence&&pSh, !lowConfidence&&pTu, !lowConfidence&&pTi, !lowConfidence&&isBadNeck, !lowConfidence&&isBadTrunk);
+
+  document.getElementById('dangerVfx').classList.toggle('on',isBad&&!lowConfidence);
+
+  // 各偵測類型觸發次數與時長統計（供結束報告使用）
+  const okStat=!lowConfidence&&inSession; // 僅有效幀計入統計
+  trackDet('legacy','shoulder', okStat&&isBadSh, dtSec);
+  trackDet('legacy','turtle',   okStat&&isBadTu, dtSec);
+  trackDet('legacy','tilt',     okStat&&isBadTi, dtSec);
+  trackDet('new','shoulder',    okStat&&isBadLean, dtSec);
+  trackDet('new','turtle',      okStat&&isBadCva, dtSec);
+  trackDet('new','tilt',        okStat&&isBadTiNew, dtSec);
+  trackDet('common','neck',     okStat&&!!earM&&isBadNeck, dtSec);
+  trackDet('common','trunk',    okStat&&isBadTrunk, dtSec);
+  if(okStat){
+    if(v2.cvaValid) detStats.validTime.cva+=dtSec;
+    if(v2.leanValid)detStats.validTime.lean+=dtSec;
+    if(v2.tiltOk&&lSh&&rSh)detStats.validTime.tilt+=dtSec;
+    if(earM)detStats.validTime.neck+=dtSec;
+    if(tA!==null&&isFinite(tA))detStats.validTime.trunk+=dtSec;
+    if(grand!==null){rulaAgg.w+=dtSec; rulaAgg.sum+=grand*dtSec; rulaAgg.max=Math.max(rulaAgg.max,grand); rulaAgg.n++;}
+  }
+
+  // Streak（低信心度時暫停：不累積不良時間、不觸發 beep）
+  const nowS=now/1000; let streak=0;
+  if(isBad&&!lowConfidence){
+    if(!badStart)badStart=nowS;
+    streak=nowS-badStart;
+    if(streak>=BEEP_THRESH&&nowS-lastBeep>=BEEP_CD){beep();lastBeep=nowS;}
+    const pct=Math.min(streak/BEEP_THRESH*100,100);
+    const bb=document.getElementById('beepBar');
+    bb.style.width=pct+'%'; bb.className='beep-f'+(pct>=100?' alert':'');
+    const sv=document.getElementById('streakVal');
+    sv.textContent=streak.toFixed(1)+'s'; sv.className='streak-v'+(streak>=BEEP_THRESH?' fired':'');
+    badTotal+=dtSec;
+  } else {
+    badStart=null;
+    document.getElementById('beepBar').style.width='0%';
+    document.getElementById('beepBar').className='beep-f';
+    const sv=document.getElementById('streakVal');
+    sv.textContent = lowConfidence?'已暫停':'0.0s';
+    sv.className='streak-v';
+  }
+
+  // History（tA / sSmooth 可能因髖部缺失而為 null；此時沿用最後一筆有效值，避免圖表被誤畫成 0）
+  const uaAvg=uaLA!==null&&uaRA!==null?(uaLA+uaRA)/2:uaLA??uaRA??0;
+  neckHist.push(nA);   if(neckHist.length>HIST)neckHist.shift();
+  const trunkPlot=(tA!==null&&isFinite(tA))?tA:(trunkHist.length?trunkHist[trunkHist.length-1]:0);
+  trunkHist.push(trunkPlot);  if(trunkHist.length>HIST)trunkHist.shift();
+  uaHist.push(uaAvg);  if(uaHist.length>HIST)uaHist.shift();
+  const shoulderPlot=(sSmooth!==null&&isFinite(sSmooth))?Math.min((shoulderWidth?sSmooth/shoulderWidth:sSmooth/W)*90,90):(shoulderHist.length?shoulderHist[shoulderHist.length-1]:0);
+  shoulderHist.push(shoulderPlot); if(shoulderHist.length>HIST)shoulderHist.shift();
+  drawChart();
+
+  // dataLog：低信心度的幀仍會記錄（保留完整時間序列供 CSV 分析），
+  // 但以 lowConf 旗標標記為「已排除」，且不計入 bad（不良姿勢）判定。
+  if(sessionStart){
+    const logEntry={
+      ts:now, el:(now-sessionStart)/1000,
+      nR:neckRaw, nE:isFinite(emaNeck)?emaNeck:neckRaw, nC:neckCal,
+      tR:trunkRaw, tE:(emaTrunk!==null&&isFinite(emaTrunk))?emaTrunk:trunkRaw, tC:trunkCal,
+      uaL:uaLA, uaR:uaRA, laL:laLA, laR:laRA, wrL:wrLA, wrR:wrRA,
+      sNeck, sTrunk, sUA, sLA, sWR, gA, gB, staticBonusB, grand,
+      bad:(isBad&&!lowConfidence), streak, cal:calPhase==='done',
+      shFwd:sSmooth, tuFwd:tSmooth, tiDeg:tiSmooth,
+      isSh:isBadSh, isTu:isBadTu, isTi:isBadTi,
+      neckStaticFlag:neckStatic.isStatic, trunkStaticFlag:trunkStatic.isStatic,
+      avgConf:avgConfidence, conf6:avgConfidence6, confNear:avgConfidenceNear, lowConf:lowConfidence,
+      hipMissing:hipMissing,
+      mode:detMode, phi:v2.phi, viewClass:v2.viewClass, facing:v2.facing,
+      TL:v2.TL, SW:shoulderWidth, ESV:v2.ESV, HS:v2.HS, headPitch:v2.headPitch,
+      cvaRaw:v2.cva, cvaS:cvaS, cvaFlag:isBadCva,
+      leanRaw:v2.lean, leanS:leanS, leanFlag:isBadLean, tiltOk:v2.tiltOk,
+      confEma:emaConf, frameIdx:totalFrames
+    };
+    pushLog(logEntry); // 項目 5：達上限時降採樣，不再 shift() 靜默丟棄最舊資料
+  }
+}
+</script>
+<script>
+// ═══ 介面層：影像區長寬比、高解析度 canvas、無障礙語意 ═══
+// 僅處理顯示；不讀寫任何偵測、評分、計時或紀錄狀態。各段獨立 try/catch，任一段失敗不影響其餘與主程式。
+(function(){
+  'use strict';
+  var $=function(id){return document.getElementById(id);};
+
+  // 1) 窄螢幕版面：影像區長寬比跟隨實際串流（loadedmetadata／resize＝方向改變）
+  try{
+    var vid=$('video'), cam=$('camArea');
+    var syncAR=function(){
+      if(vid.videoWidth>0&&vid.videoHeight>0){
+        cam.style.setProperty('--cam-ar',vid.videoWidth+' / '+vid.videoHeight);
+        cam.style.setProperty('--cam-ar-num',(vid.videoWidth/vid.videoHeight).toFixed(4));
+      }
+    };
+    ['loadedmetadata','resize'].forEach(function(ev){vid.addEventListener(ev,syncAR);});
+  }catch(e){}
+
+  // 2) 高解析度 canvas：canvas.width／height 仍回傳「邏輯（CSS）尺寸」，所有繪製與判定用座標不變；
+  //    實體像素緩衝依 devicePixelRatio 放大，並以 setTransform 補償。
+  try{
+    var proto=HTMLCanvasElement.prototype;
+    var wd=Object.getOwnPropertyDescriptor(proto,'width'), hd=Object.getOwnPropertyDescriptor(proto,'height');
+    var hiDpi=function(el,c2d,fitCss){
+      if(!wd||!hd||!wd.set||!hd.set||!c2d||typeof c2d.setTransform!=='function')return;
+      var lw=el.width, lh=el.height, curW=-1, curH=-1;
+      var toUL=function(v,d){v=Number(v);return (isFinite(v)&&v>=0)?Math.floor(v):d;};
+      var ratio=function(){return Math.max(1,Math.min(window.devicePixelRatio||1,3));};
+      var apply=function(force){
+        var r=ratio(), dw=Math.round(lw*r), dh=Math.round(lh*r);
+        if(fitCss&&el.clientWidth>0)dw=Math.round(el.clientWidth*r);
+        if(!force&&dw===curW&&dh===curH)return;
+        wd.set.call(el,dw); hd.set.call(el,dh); curW=dw; curH=dh;
+        c2d.setTransform(dw/Math.max(lw,1),0,0,dh/Math.max(lh,1),0,0);
+      };
+      Object.defineProperty(el,'width',{configurable:true,enumerable:true,get:function(){return lw;},set:function(v){lw=toUL(v,300);apply(true);}});
+      Object.defineProperty(el,'height',{configurable:true,enumerable:true,get:function(){return lh;},set:function(v){lh=toUL(v,150);apply(true);}});
+      apply(true);
+      window.addEventListener('resize',function(){apply(false);});
+      if(typeof ResizeObserver!=='undefined')new ResizeObserver(function(){apply(false);}).observe(el);
+    };
+    hiDpi(canvas,ctx,false);
+    hiDpi(cc,cct,true);
+  }catch(e){}
+
+  // 3) 無障礙語意
+  try{
+    // 裝飾性 SVG
+    Array.prototype.forEach.call(document.querySelectorAll('svg'),function(s){s.setAttribute('aria-hidden','true');s.setAttribute('focusable','false');});
+
+    // 頁籤：aria-selected／roving tabindex 隨 switchTab 切換之 class 同步；方向鍵、Home、End 操作
+    var tabs=Array.prototype.slice.call(document.querySelectorAll('.tab-btn'));
+    var syncTabs=function(){tabs.forEach(function(t){var on=t.classList.contains('active');t.setAttribute('aria-selected',on?'true':'false');t.tabIndex=on?0:-1;});};
+    syncTabs();
+    var tmo=new MutationObserver(syncTabs);
+    tabs.forEach(function(t){tmo.observe(t,{attributes:true,attributeFilter:['class']});});
+    var row=document.querySelector('.tab-row');
+    row.addEventListener('keydown',function(e){
+      var i=tabs.indexOf(document.activeElement); if(i<0)return;
+      var n=-1;
+      if(e.key==='ArrowRight')n=(i+1)%tabs.length;
+      else if(e.key==='ArrowLeft')n=(i-1+tabs.length)%tabs.length;
+      else if(e.key==='Home')n=0;
+      else if(e.key==='End')n=tabs.length-1;
+      if(n>=0){e.preventDefault();tabs[n].click();tabs[n].focus();}
+    });
+
+    // 暫停鈕：名稱隨「暫停／繼續」更新（aria-label 含可見文字）
+    var pb=$('pauseBtn'), pl=$('pauseBtnLabel');
+    var syncPause=function(){pb.setAttribute('aria-label',pl.textContent.trim()==='繼續'?'繼續監測':'暫停監測');};
+    syncPause();
+    new MutationObserver(syncPause).observe(pl,{childList:true,characterData:true,subtree:true});
+
+    // 切換鈕：aria-pressed 隨 on class 同步
+    Array.prototype.forEach.call(document.querySelectorAll('.ema-tog'),function(b){
+      var s=function(){b.setAttribute('aria-pressed',b.classList.contains('on')?'true':'false');};
+      s(); new MutationObserver(s).observe(b,{attributes:true,attributeFilter:['class']});
+    });
+  }catch(e){}
+})();
+</script>
+<!-- ══════════ DEBUG PANEL BEGIN ══════════
+     診斷面板：僅在網址帶 ?debug=1 時啟用。未帶參數時，本區塊於第一個條件判斷即返回：
+     不建立面板、不建立緩衝、不包裝任何函式，對一般使用完全無影響。
+     做法：不修改 onPoseResults 內部，而以包裝函式「先執行原函式、再讀取其執行後之狀態」，故不改變任何判定行為。
+     讀取之既有變數：emaConf、confLow、fps、detMode、canvas、video、isPaused、isInterrupted()、pickNearSide()、VIS_MIN、
+     以及介面元素 #confVal、#rulaGrand 之文字（供比對「畫面上是否仍停留在舊數值」）。
+     常數 DBG_BUF_MAX、DBG_UI_MIN_MS 定義於主程式 CONSTANTS 區（檔案頂部）。 -->
+<script>
+(function(){
+  'use strict';
+  let qs=null;
+  try{ qs=new URLSearchParams(location.search); }catch(e){ return; }
+  if(qs.get('debug')!=='1') return;
+
+  const rd=(fn,fb)=>{ try{ const v=fn(); return (v===undefined)?fb:v; }catch(e){ return fb; } };
+  const BUF_MAX  =rd(()=>DBG_BUF_MAX,600);
+  const UI_MIN_MS=rd(()=>DBG_UI_MIN_MS,100);
+  const CONF_IDX=[7,8,11,12,23,24];   // 與 onPoseResults 之信心度六點相同
+  const HDR=['Timestamp_ms','Frame','HasLandmarks','Branch','Vis0','Vis7','Vis8','Vis11','Vis12','Vis23','Vis24',
+             'NearSide','AvgConf6','AvgConfNear','EmaConf','ConfLow','CanvasW','CanvasH','VideoW','VideoH','K',
+             'NoneStreak','FPS','UiConf','UiGrand','DetMode','CoordComp','Scale_s','OffsetX','OffsetY'];
+
+  // ── 環形緩衝（最近 BUF_MAX 幀）──
+  const buf=new Array(BUF_MAX); let head=0, count=0, seq=0, noneStreak=0, dbgErr='', lastUi=0, collapsed=false;
+  function push(r){ buf[head]=r; head=(head+1)%BUF_MAX; if(count<BUF_MAX)count++; }
+  function snapshot(){ const out=[]; const s=(count<BUF_MAX)?0:head; for(let i=0;i<count;i++)out.push(buf[(s+i)%BUF_MAX]); return out; }
+
+  // ── 讀取一幀（於原函式執行後呼叫）──
+  function record(results){
+    const lm=(results&&results.poseLandmarks)?results.poseLandmarks:null;
+    const visMin=rd(()=>VIS_MIN,0.4);
+    const vShow=i=>(lm&&lm[i]&&lm[i].visibility!=null)?lm[i].visibility:null;  // 顯示用：缺值為 null
+    const vNum =i=>{const x=vShow(i);return x===null?0:x;};                     // 同 onPoseResults 之 visOf：缺值視為 0
+    let branch='NONE', near='', c6=null, cn=null;
+    if(lm){
+      noneStreak=0;
+      const seen=i=>!!(lm[i]&&lm[i].visibility>visMin);                          // 同 onPoseResults 之 vis()
+      branch=(!seen(11)&&!seen(12))?'SHOULDERS_HIDDEN':'FULL';
+      c6=CONF_IDX.reduce((s,i)=>s+vNum(i),0)/CONF_IDX.length;
+      near=rd(()=>pickNearSide(lm),'');
+      cn=(near==='L')?(vNum(7)+vNum(11)+vNum(23))/3:(near==='R')?(vNum(8)+vNum(12)+vNum(24))/3:null;
+    } else { noneStreak++; }
+    const cw=rd(()=>canvas.width,null),  ch=rd(()=>canvas.height,null);
+    const vw=rd(()=>video.videoWidth,null), vh=rd(()=>video.videoHeight,null);
+    const k=(cw>0&&ch>0&&vw>0&&vh>0)?(cw/ch)/(vw/vh):null;
+    const txt=id=>{const e=document.getElementById(id);return e?e.textContent:'';};
+    const row={
+      ts:Date.now(), frame:++seq, has:!!lm, branch:branch,
+      v0:vShow(0), v7:vShow(7), v8:vShow(8), v11:vShow(11), v12:vShow(12), v23:vShow(23), v24:vShow(24),
+      near:near, c6:c6, cn:cn, ema:rd(()=>emaConf,null), low:rd(()=>confLow,null),
+      cw:cw, ch:ch, vw:vw, vh:vh, k:k, none:noneStreak, fps:rd(()=>fps,null),
+      uiConf:txt('confVal'), uiGrand:txt('rulaGrand'), mode:rd(()=>detMode,''),
+      comp:rd(()=>VG.comp,''), gs:rd(()=>VG.s,null), gox:rd(()=>VG.ox,null), goy:rd(()=>VG.oy,null)
+    };
+    push(row);
+    if(row.ts-lastUi>=UI_MIN_MS){ lastUi=row.ts; render(row); }
+  }
+
+  // ── 格式化 ──
+  const f2=v=>(v===null||v===undefined||!isFinite(v))?'--':Number(v).toFixed(2);
+  const f3=v=>(v===null||v===undefined||!isFinite(v))?'--':Number(v).toFixed(3);
+  const nn=v=>(v===null||v===undefined)?'--':String(v);
+  const csvv=v=>(v===null||v===undefined)?'':String(v);
+
+  // ── 面板 ──
+  const st=document.createElement('style'); st.id='dbgStyle';
+  st.textContent='#dbgPanel{position:fixed;left:8px;top:96px;z-index:2147483000;max-width:330px;background:rgba(0,0,0,.78);color:#9fe8ff;'
+   +'font:10px/1.5 ui-monospace,Menlo,Consolas,monospace;border:1px solid rgba(255,255,255,.25);border-radius:8px;padding:6px 8px;pointer-events:auto}'
+   +'#dbgPanel pre{margin:4px 0 0;white-space:pre-wrap;word-break:break-all;font:inherit}'
+   +'#dbgPanel button{font:inherit;color:#fff;background:rgba(59,130,246,.55);border:1px solid rgba(255,255,255,.3);border-radius:6px;padding:2px 6px;margin-right:4px;cursor:pointer}';
+  (document.head||document.documentElement).appendChild(st);
+  const panel=document.createElement('div'); panel.id='dbgPanel';
+  const bar=document.createElement('div');
+  const title=document.createElement('span'); title.textContent='DEBUG ?debug=1 ';
+  const bTog=document.createElement('button'); bTog.id='dbgToggle'; bTog.type='button'; bTog.textContent='－';
+  const bDl =document.createElement('button'); bDl.id='dbgDownload'; bDl.type='button'; bDl.textContent='下載除錯紀錄 CSV';
+  const pre=document.createElement('pre'); pre.id='dbgBody'; pre.textContent='等待第一幀…（請先按「啟動攝影機」）';
+  bar.appendChild(title); bar.appendChild(bTog); bar.appendChild(bDl);
+  panel.appendChild(bar); panel.appendChild(pre); document.body.appendChild(panel);
+  bTog.addEventListener('click',()=>{ collapsed=!collapsed; pre.style.display=collapsed?'none':'block'; bTog.textContent=collapsed?'＋':'－'; });
+  bDl.addEventListener('click',()=>download());
+
+  function render(r){
+    const L=[];
+    L.push('hasLandmarks: '+(r.has?'true':'false')+'  branch: '+r.branch+'  noneStreak: '+r.none);
+    L.push('vis  0:'+f2(r.v0)+' 7:'+f2(r.v7)+' 8:'+f2(r.v8)+' 11:'+f2(r.v11)+' 12:'+f2(r.v12)+' 23:'+f2(r.v23)+' 24:'+f2(r.v24));
+    L.push('near: '+(r.near||'--')+'  conf6: '+f2(r.c6)+'  confNear: '+f2(r.cn));
+    L.push('emaConf: '+f2(r.ema)+'  lowConf: '+nn(r.low)+'  mode: '+nn(r.mode));
+    L.push('畫面顯示  信心度: '+r.uiConf+'  Grand: '+r.uiGrand);
+    L.push('canvas: '+nn(r.cw)+'×'+nn(r.ch)+'  video: '+nn(r.vw)+'×'+nn(r.vh)+'  k: '+f3(r.k));
+    L.push('座標補償: '+({'aspect-equal':'k=1，無需補償','cover-compensated':'已補償（cover 裁切）','size-unknown':'未補償（影像尺寸未知，沿用舊版換算）'}[r.comp]||'—')+'  s='+f3(r.gs)+'  位移 x='+f2(r.gox)+' y='+f2(r.goy));
+    L.push('fps: '+nn(r.fps)+'  buffer: '+count+'/'+BUF_MAX);
+    if(dbgErr)L.push('DEBUG 錯誤: '+dbgErr);
+    pre.textContent=L.join('\n');
+  }
+
+  // ── CSV ──
+  function stamp(){
+    const s=rd(()=>localStamp(),null); if(s)return s;
+    const d=new Date(),p=n=>String(n).padStart(2,'0');
+    return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'-'+p(d.getHours())+'-'+p(d.getMinutes())+'-'+p(d.getSeconds());
+  }
+  function rowToCsv(r){
+    return [r.ts,r.frame,r.has?1:0,r.branch,csvv(r.v0),csvv(r.v7),csvv(r.v8),csvv(r.v11),csvv(r.v12),csvv(r.v23),csvv(r.v24),
+            r.near,csvv(r.c6===null?null:r.c6.toFixed(4)),csvv(r.cn===null?null:r.cn.toFixed(4)),
+            csvv(r.ema===null?null:Number(r.ema).toFixed(4)),csvv(r.low===null?null:(r.low?1:0)),
+            csvv(r.cw),csvv(r.ch),csvv(r.vw),csvv(r.vh),csvv(r.k===null?null:r.k.toFixed(4)),
+            r.none,csvv(r.fps),r.uiConf,r.uiGrand,r.mode,r.comp,csvv(r.gs===null?null:Number(r.gs).toFixed(6)),csvv(r.gox===null?null:Number(r.gox).toFixed(3)),csvv(r.goy===null?null:Number(r.goy).toFixed(3))].join(',');
+  }
+  function buildCsv(){
+    const rows=snapshot();
+    const tz=rd(()=>tzLabel(),''), when=rd(()=>localDateTime(Date.now()),new Date().toISOString());
+    const L=[];
+    L.push('# Chris_Debug_CSV（診斷用，非研究資料）| 匯出時間(本地 '+tz+')='+when);
+    L.push('# Rows='+rows.length+' | BufferMax='+BUF_MAX+' | 為最近 '+rows.length+' 幀（環形緩衝，較舊者已被覆蓋）| URL='+location.pathname+location.search);
+    L.push('# UA='+navigator.userAgent+' | screen='+screen.width+'x'+screen.height+' | inner='+window.innerWidth+'x'+window.innerHeight+' | devicePixelRatio='+window.devicePixelRatio);
+    L.push('# Branch: NONE=poseLandmarks 空；SHOULDERS_HIDDEN=兩肩 visibility 皆不大於 VIS_MIN；FULL=其餘。UiConf／UiGrand 為畫面元素文字，K=(canvas寬/高)÷(video寬/高)；CoordComp：aspect-equal＝k=1 無需補償、cover-compensated＝已補償、size-unknown＝影像尺寸未知（沿用舊版）；Scale_s／OffsetX／OffsetY 為等向縮放比與 cover 裁切位移；讀取請用 pandas.read_csv(path, comment="#")');
+    return '\uFEFF'+[...L,HDR.join(','),...rows.map(rowToCsv)].join('\n');
+  }
+  function download(){
+    if(!count){ try{alert('尚無診斷紀錄，請先啟動攝影機。');}catch(e){} return; }
+    const url=URL.createObjectURL(new Blob([buildCsv()],{type:'text/csv;charset=utf-8;'}));
+    const a=document.createElement('a'); a.href=url; a.download='Chris_Debug_'+stamp()+'.csv';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  }
+
+  // ── 包裝 onPoseResults：先執行原函式，再讀取狀態；原函式之回傳值與例外原樣保留 ──
+  const orig=window.onPoseResults;
+  if(typeof orig!=='function'){ pre.textContent='DEBUG 錯誤：找不到 onPoseResults，診斷未啟用（不影響主程式）。'; return; }
+  window.onPoseResults=function(results){
+    let ret;
+    try{ ret=orig.apply(this,arguments); }
+    finally{
+      try{
+        // 與原函式相同：暫停／背景中斷期間之在途幀被丟棄，不記錄
+        if(!rd(()=>(isPaused||isInterrupted()),false)) record(results);
+      }catch(e){ dbgErr=String(e&&e.message||e); }
+    }
+    return ret;
+  };
+  // 供除錯與自動化測試取用（僅 ?debug=1 時存在）
+  window.__chrisDebug={rows:snapshot,csv:buildCsv,download:download,max:BUF_MAX};
+})();
+</script>
+<!-- ══════════ DEBUG PANEL END ══════════ -->
+</body>
+</html>
